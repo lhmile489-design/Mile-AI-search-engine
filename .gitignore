@@ -1,0 +1,22 @@
+# 后端是独立仓库（AISearchEngineBackEnd），不纳入本仓库
+/backend/
+
+# 依赖与构建产物
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# 密钥
+.env
+.env.*
+!.env.example
+
+# IDE 与系统文件
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 教程原文是第三方文章剪藏，只留在本机作参考，不随仓库公开
+docs/Vibe Coding 实战*.md
