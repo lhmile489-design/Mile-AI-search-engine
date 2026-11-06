@@ -151,7 +151,7 @@ Windows 注意：curl 用 `curl.exe`；PowerShell 用 `;` 分隔命令；端口�
 | 里程碑 | 内容 | 负责 | 状态 |
 | --- | --- | --- | --- |
 | M0 | 外部依赖实测（DeepSeek、Tavily、QuickRouter Jev、`@openuidev/react-lang`） | 后端 + 前端 | 完成 2026-11-06（Jev 缺密钥未测，第一版用本地域名规则；学习文档 `docs/learning/M0-外部依赖与SSE基础.md`） |
-| M1 | 接口与数据库设计定稿 | 后端出稿，主调度定稿 | 待开始 |
+| M1 | 接口与数据库设计定稿 | 后端出稿，主调度定稿 | 完成 2026-11-06（`docs/接口设计.md` v1.0、`docs/数据库设计.md` v1.0；学习文档 `docs/learning/M1-RAG链路与契约先行.md`） |
 | M2 | 后端最小闭环 | 后端 | 待开始 |
 | M3 | 前端三屏（对 mock） | 前端 | 待开始 |
 | M4 | 联调 + 历史 + 缓存 | 双端 | 待开始 |
