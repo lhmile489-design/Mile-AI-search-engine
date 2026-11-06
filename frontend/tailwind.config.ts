@@ -16,7 +16,12 @@ export default {
           DEFAULT: 'var(--accent)', deep: 'var(--accent-deep)',
           soft: 'var(--accent-soft)', 'soft-ink': 'var(--accent-soft-ink)',
           on: 'var(--on-accent)',
+          // M0 补充：幽灵按钮悬停 / 按下（令牌已在 :root，DESIGN.md §9 待同步）
+          'tint-hover': 'var(--accent-tint-hover)', 'tint-press': 'var(--accent-tint-press)',
         },
+        // M0 补充：停用底色、开关关闭轨道（DESIGN.md §9 待同步）
+        disabled: 'var(--disabled-bg)',
+        'track-off': 'var(--track-off)',
         success: { DEFAULT: 'var(--success)', soft: 'var(--success-soft)' },
         warning: { DEFAULT: 'var(--warning)', soft: 'var(--warning-soft)' },
         danger: { DEFAULT: 'var(--danger)', soft: 'var(--danger-soft)' },
@@ -29,7 +34,18 @@ export default {
         'accent-hover': 'var(--shadow-accent-hover)',
         'accent-press': 'var(--shadow-accent-press)',
         'inset-input': 'var(--shadow-inset-input)',
+        'inset-track': 'var(--shadow-inset-track)', // M0 补充，DESIGN.md §9 待同步
       },
+      // M0 补充：行高、字距、缓动（DESIGN.md §9 待同步）
+      lineHeight: {
+        body: 'var(--leading-body)', heading: 'var(--leading-heading)',
+        display: 'var(--leading-display)',
+      },
+      letterSpacing: {
+        eyebrow: 'var(--tracking-eyebrow)', meta: 'var(--tracking-meta)',
+        'label-caps': 'var(--tracking-label-caps)',
+      },
+      transitionTimingFunction: { DEFAULT: 'var(--ease)' },
       borderRadius: {
         xs: 'var(--radius-xs)', sm: 'var(--radius-sm)', md: 'var(--radius-md)',
         card: 'var(--radius)', pill: 'var(--radius-pill)',
