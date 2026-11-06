@@ -44,6 +44,22 @@
 - 子 session 收到不属于自己目录的任务，回复「超出本 session 边界」并说明应交给谁。
 - 上下文压缩后第一件事：确认自己是哪个 session、cwd 在哪。
 
+**仓库与提交规则**（2026-11-06 确定）：
+
+| 仓库 | 本地位置 | 内容 | 谁提交 |
+| --- | --- | --- | --- |
+| `AISearchEngine`（gitcode） | 项目根目录 | 根目录文档 + `docs/` + `frontend/` | 主调度：只 `git add` 根目录文档与 `docs/`；前端：只 `git add frontend/` |
+| `AISearchEngineBackEnd`（gitcode） | `backend/`（根仓库已忽略 `/backend/`） | 后端全部 | 后端 session，在 `backend/` 内照常提交 |
+
+- 默认分支 `main`，提交信息用约定式提交，含中文时用 `git commit -F <文件>`。
+- 提交前确认没有 `.env`、没有密钥字符串；`.env.example` 只放空模板。
+- 推送前先说明影响面，由用户确认。
+
+**已定决策（M0）**：
+
+- Q6：安装 `@openuidev/react-lang` 等 OpenUI 包前设置 `OPENUI_TELEMETRY_DISABLED=1`（并写进前端安装说明），不向 PostHog 外发遥测。
+- Q8：Tailwind 的颜色、阴影、圆角、字号在 `theme` 顶层整体覆盖，只能用令牌；尺寸刻度保留默认。见 `DESIGN.md` §9。
+
 ---
 
 ## 3. 学习文档（强制）
@@ -134,7 +150,7 @@ Windows 注意：curl 用 `curl.exe`；PowerShell 用 `;` 分隔命令；端口�
 
 | 里程碑 | 内容 | 负责 | 状态 |
 | --- | --- | --- | --- |
-| M0 | 外部依赖实测（DeepSeek、Tavily、QuickRouter Jev、`@openuidev/react-lang`） | 后端 + 前端 | 待开始 |
+| M0 | 外部依赖实测（DeepSeek、Tavily、QuickRouter Jev、`@openuidev/react-lang`） | 后端 + 前端 | 完成 2026-11-06（Jev 缺密钥未测，第一版用本地域名规则；学习文档 `docs/learning/M0-外部依赖与SSE基础.md`） |
 | M1 | 接口与数据库设计定稿 | 后端出稿，主调度定稿 | 待开始 |
 | M2 | 后端最小闭环 | 后端 | 待开始 |
 | M3 | 前端三屏（对 mock） | 前端 | 待开始 |

@@ -3,7 +3,7 @@
 > 本文件是前端视觉的**单一来源**。所有颜色、字体、圆角、阴影、间距、层级、动效都从这里取值，组件代码里不允许出现 hex 色值或游离的魔法数字。
 > 视觉基线：`E:\WebApp\Claude Fable 5 Max\style-templates\pages\46-dimensional-layering.html`（46 维度分层）。
 > 适用：本项目所有前端代码（Next.js + Tailwind CSS v3）。产品层面的约束见同目录 `PRODUCT.md`。
-> 版本：v1.0 · 2026-11-06
+> 版本：v1.1 · 2026-11-06（M0 审核：§9 映射改为顶层覆盖颜色/阴影/圆角/字号，§6 开关与圆点尺寸取整）
 
 ---
 
@@ -342,12 +342,12 @@ h2::after {
 ### 6.4 chip、badge、eyebrow
 
 - chip：`--surface`、`--radius-pill`、内边距 `--space-2` × `--space-4`、`--text-label`、`--ink-soft` 字、`--elevation-1`；强调字用 `--accent-deep` 600。可点击的 chip（推荐问题）悬停时上移 2px、升到 `--elevation-2`。
-- badge：`--accent-soft` 底、`--accent-soft-ink` 字、`--text-sm` 600、`--radius-pill`、`--elevation-1`，左侧 7px 圆点用 `currentColor`。深色变体：`--ink` 底、`--on-accent` 字。
+- badge：`--accent-soft` 底、`--accent-soft-ink` 字、`--text-sm` 600、`--radius-pill`、`--elevation-1`，左侧 8px 圆点用 `currentColor`（模板 7px，按 4px 刻度取整）。深色变体：`--ink` 底、`--on-accent` 字。
 - eyebrow：`--surface` 底、`--accent-deep` 字、`--text-label` 600、字距 `--tracking-eyebrow`、`--radius-pill`、`--elevation-1`。
 
 ### 6.5 开关
 
-轨道 50×28px、`--radius-pill`、关闭态 `--track-off` + `--shadow-inset-track`、开启态 `--accent`。滑块 22px 白色圆 + `--elevation-2`，开启时 `translateX(22px)`。用原生 `<input type="checkbox" role="switch">`，焦点环画在轨道上。
+轨道 48×28px、`--radius-pill`、关闭态 `--track-off` + `--shadow-inset-track`、开启态 `--accent`。滑块 20px 白色圆 + `--elevation-2`，开启时 `translateX(20px)`（模板为 50×28 / 22 / 22，按 4px 刻度取整）。用原生 `<input type="checkbox" role="switch">`，焦点环画在轨道上。
 
 ### 6.6 焦点
 
@@ -422,51 +422,83 @@ h2::after {
 
 组件里用这些类名，背后指向 CSS 变量。不允许写任意值（`[#...]`、`[13px]`）。
 
+**覆盖范围（M0 决定，Q8）**：颜色、阴影、圆角、字号四类写在 `theme` 顶层，**整体替换** Tailwind 默认值，`bg-blue-500`、`shadow-lg`、`rounded-xl`、`text-3xl` 这类写法直接不生成样式。这四类最容易破坏风格，所以锁死。宽高、内外边距、位移等尺寸刻度放在 `extend` 里，保留 Tailwind 默认刻度（如 `h-10`、`-translate-y-0.5`），绕过令牌的风险小。
+
+顶层覆盖后的注意点：
+
+- 默认边框色会退回 `currentColor`，所以 `borderColor.DEFAULT` 必须映射到 `--layer-line`，否则不带颜色的 `border-t` 会变成文字色。
+- 不带颜色的 `ring` 默认色映射到 `--accent`；焦点环偏移色映射到 `--surface`，不用 Tailwind 默认白色（M0 P4）。
+- 颜色表保留 `transparent`、`current`、`inherit` 三个关键字；阴影和圆角保留 `none`。
+
 ```ts
 import type { Config } from 'tailwindcss'
 
 export default {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
+    // ---------- 顶层覆盖：只能用令牌 ----------
+    colors: {
+      transparent: 'transparent', current: 'currentColor', inherit: 'inherit',
+      bg: 'var(--bg)',
+      surface: { DEFAULT: 'var(--surface)', sunk: 'var(--surface-sunk)' },
+      line: { DEFAULT: 'var(--layer-line)', input: 'var(--line-input)' },
+      ink: {
+        DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)',
+        muted: 'var(--ink-muted)', faint: 'var(--ink-faint)',
+      },
+      accent: {
+        DEFAULT: 'var(--accent)', deep: 'var(--accent-deep)',
+        soft: 'var(--accent-soft)', 'soft-ink': 'var(--accent-soft-ink)',
+        on: 'var(--on-accent)',
+        'tint-hover': 'var(--accent-tint-hover)', 'tint-press': 'var(--accent-tint-press)',
+      },
+      disabled: 'var(--disabled-bg)',
+      'track-off': 'var(--track-off)',
+      success: { DEFAULT: 'var(--success)', soft: 'var(--success-soft)' },
+      warning: { DEFAULT: 'var(--warning)', soft: 'var(--warning-soft)' },
+      danger: { DEFAULT: 'var(--danger)', soft: 'var(--danger-soft)' },
+      highlight: { bg: 'var(--highlight-bg)', ink: 'var(--highlight-ink)' },
+    },
+    boxShadow: {
+      none: 'none',
+      e1: 'var(--elevation-1)', e2: 'var(--elevation-2)',
+      e3: 'var(--elevation-3)', e4: 'var(--elevation-4)',
+      'top-edge': 'var(--elevation-top-edge)',
+      'accent-rest': 'var(--shadow-accent-rest)',
+      'accent-hover': 'var(--shadow-accent-hover)',
+      'accent-press': 'var(--shadow-accent-press)',
+      'inset-input': 'var(--shadow-inset-input)',
+      'inset-track': 'var(--shadow-inset-track)',
+      'focus-soft': 'var(--ring-focus-soft)',
+    },
+    borderRadius: {
+      none: '0',
+      xs: 'var(--radius-xs)', sm: 'var(--radius-sm)', md: 'var(--radius-md)',
+      card: 'var(--radius)', pill: 'var(--radius-pill)',
+    },
+    fontSize: {
+      xs: 'var(--text-xs)', sm: 'var(--text-sm)', label: 'var(--text-label)',
+      ui: 'var(--text-ui)', base: 'var(--text-base)', lg: 'var(--text-lg)',
+      xl: 'var(--text-xl)', '2xl': 'var(--text-2xl)', display: 'var(--text-display)',
+    },
+    // ---------- extend：保留默认尺寸刻度 ----------
     extend: {
-      colors: {
-        bg: 'var(--bg)',
-        surface: { DEFAULT: 'var(--surface)', sunk: 'var(--surface-sunk)' },
-        line: { DEFAULT: 'var(--layer-line)', input: 'var(--line-input)' },
-        ink: {
-          DEFAULT: 'var(--ink)', soft: 'var(--ink-soft)',
-          muted: 'var(--ink-muted)', faint: 'var(--ink-faint)',
-        },
-        accent: {
-          DEFAULT: 'var(--accent)', deep: 'var(--accent-deep)',
-          soft: 'var(--accent-soft)', 'soft-ink': 'var(--accent-soft-ink)',
-          on: 'var(--on-accent)',
-        },
-        success: { DEFAULT: 'var(--success)', soft: 'var(--success-soft)' },
-        warning: { DEFAULT: 'var(--warning)', soft: 'var(--warning-soft)' },
-        danger: { DEFAULT: 'var(--danger)', soft: 'var(--danger-soft)' },
-        highlight: { bg: 'var(--highlight-bg)', ink: 'var(--highlight-ink)' },
-      },
-      boxShadow: {
-        e1: 'var(--elevation-1)', e2: 'var(--elevation-2)',
-        e3: 'var(--elevation-3)', e4: 'var(--elevation-4)',
-        'accent-rest': 'var(--shadow-accent-rest)',
-        'accent-hover': 'var(--shadow-accent-hover)',
-        'accent-press': 'var(--shadow-accent-press)',
-        'inset-input': 'var(--shadow-inset-input)',
-      },
-      borderRadius: {
-        xs: 'var(--radius-xs)', sm: 'var(--radius-sm)', md: 'var(--radius-md)',
-        card: 'var(--radius)', pill: 'var(--radius-pill)',
-      },
+      borderColor: { DEFAULT: 'var(--layer-line)' },
+      // 不映射时，不带颜色的 ring 会退回 Tailwind 内置的 #3b82f6
+      ringColor: { DEFAULT: 'var(--accent)' },
+      ringOffsetColor: { DEFAULT: 'var(--surface)' },
       fontFamily: {
         display: 'var(--font-display)', body: 'var(--font-body)', mono: 'var(--font-mono)',
       },
-      fontSize: {
-        xs: 'var(--text-xs)', sm: 'var(--text-sm)', label: 'var(--text-label)',
-        ui: 'var(--text-ui)', base: 'var(--text-base)', lg: 'var(--text-lg)',
-        xl: 'var(--text-xl)', '2xl': 'var(--text-2xl)', display: 'var(--text-display)',
+      lineHeight: {
+        body: 'var(--leading-body)', heading: 'var(--leading-heading)',
+        display: 'var(--leading-display)',
       },
+      letterSpacing: {
+        eyebrow: 'var(--tracking-eyebrow)', meta: 'var(--tracking-meta)',
+        'label-caps': 'var(--tracking-label-caps)',
+      },
+      transitionTimingFunction: { DEFAULT: 'var(--ease)' },
       spacing: {
         1: 'var(--space-1)', 2: 'var(--space-2)', 3: 'var(--space-3)', 4: 'var(--space-4)',
         5: 'var(--space-5)', 6: 'var(--space-6)', 7: 'var(--space-7)', 8: 'var(--space-8)',
