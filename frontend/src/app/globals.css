@@ -137,6 +137,89 @@
   }
 }
 
+/* 以下是手写组件样式，放在 @layer 之外：.hljs-* 类名只出现在运行时生成的 HTML 里，
+   放进 @layer components 会被 Tailwind 当作未使用样式清除。 */
+
+  /* 玻璃：只给固定 / 吸顶元素（DESIGN.md §3.3） */
+  .glass-header {
+    background: var(--glass-header);
+    backdrop-filter: blur(var(--blur-amount));
+    box-shadow: var(--elevation-1);
+  }
+  .glass-float {
+    background: var(--glass-float);
+    backdrop-filter: blur(var(--blur-amount));
+    border: 1px solid var(--glass-edge);
+    box-shadow: var(--elevation-4);
+  }
+
+  /* 证据高亮配方（DESIGN.md §7） */
+  .evidence-mark {
+    background: var(--highlight-bg);
+    color: var(--ink);
+    box-shadow: inset 2px 0 0 var(--highlight-ink);
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  /* 被角标激活的信源行：左侧强调条 */
+  .source-active { box-shadow: inset 3px 0 0 var(--accent); }
+
+  /* 吸顶面板的最大高度：视口 - 顶栏 - 上下留白，全部取自间距令牌 */
+  @media (min-width: 1024px) {
+    .pane-scroll { max-height: calc(100vh - var(--space-20) - var(--space-4) - var(--space-16)); }
+  }
+
+  /* 信源行追加时的入场：只动 opacity 与 transform（DESIGN.md §8） */
+  .row-in {
+    animation: row-in var(--duration-fast) var(--ease) both;
+  }
+  @keyframes row-in {
+    from { opacity: 0; transform: translateY(var(--space-2)); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 研报正文排版。没有引入 typography 插件，这里只用令牌。 */
+  .report { max-width: var(--measure); color: var(--ink); font-size: var(--text-base); line-height: var(--leading-body); overflow-wrap: anywhere; }
+  .report > * + * { margin-top: var(--space-4); }
+  .report > :first-child { margin-top: 0; }
+  .report h1, .report h2, .report h3, .report h4 { font-family: var(--font-display); font-weight: 700; line-height: var(--leading-heading); color: var(--ink); }
+  .report h1 { font-size: var(--text-xl); }
+  .report h2 { font-size: var(--text-xl); margin-top: var(--space-8); }
+  .report h3 { font-size: var(--text-lg); margin-top: var(--space-6); }
+  .report h4 { font-size: var(--text-base); margin-top: var(--space-4); }
+  .report > h1:first-child, .report > h2:first-child, .report > h3:first-child, .report > h4:first-child { margin-top: 0; }
+  .report ul, .report ol { padding-left: var(--space-6); }
+  .report ul { list-style: disc; }
+  .report ol { list-style: decimal; }
+  .report li + li { margin-top: var(--space-1); }
+  .report a { color: var(--accent-deep); text-decoration: underline; }
+  .report strong { font-weight: 700; }
+  .report blockquote { padding-left: var(--space-4); box-shadow: inset 3px 0 0 var(--layer-line); color: var(--ink-soft); }
+  .report hr { border: 0; border-top: 1px solid var(--layer-line); }
+  .report :not(pre) > code {
+    font-family: var(--font-mono); font-size: var(--text-sm);
+    background: var(--surface-sunk); border-radius: var(--radius-xs); padding: 0 var(--space-1);
+  }
+  .report pre {
+    background: var(--ink); color: var(--on-accent); border-radius: var(--radius-md);
+    padding: var(--space-4); overflow-x: auto; font-size: var(--text-sm); line-height: 1.5;
+  }
+  .report pre code { font-family: var(--font-mono); background: transparent; padding: 0; }
+  .report .table-wrap { overflow-x: auto; }
+  .report table { border-collapse: collapse; width: 100%; font-size: var(--text-ui); }
+  .report th, .report td { padding: var(--space-2) var(--space-3); text-align: left; border-bottom: 1px solid var(--layer-line); }
+  .report th { font-weight: 600; color: var(--ink); }
+  .report .katex-display { overflow-x: auto; overflow-y: hidden; }
+
+  /* 代码高亮：rehype-highlight 只输出类名，颜色在这里用令牌定义，深色底（--ink）上对比度 >= 4.5 */
+  .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag { color: var(--accent-soft); }
+  .hljs-string, .hljs-regexp, .hljs-addition { color: var(--success-soft); }
+  .hljs-number, .hljs-symbol, .hljs-bullet, .hljs-attr, .hljs-attribute { color: var(--highlight-bg); }
+  .hljs-title, .hljs-section, .hljs-name, .hljs-type { color: var(--warning-soft); }
+  .hljs-built_in, .hljs-deletion, .hljs-variable { color: var(--danger-soft); }
+  .hljs-comment, .hljs-quote, .hljs-meta { color: var(--ink-faint); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   html { scroll-behavior: auto; }

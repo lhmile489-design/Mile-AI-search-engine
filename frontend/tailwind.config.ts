@@ -70,6 +70,8 @@ export default {
         1: 'var(--space-1)', 2: 'var(--space-2)', 3: 'var(--space-3)', 4: 'var(--space-4)',
         5: 'var(--space-5)', 6: 'var(--space-6)', 7: 'var(--space-7)', 8: 'var(--space-8)',
         12: 'var(--space-12)', 16: 'var(--space-16)', 20: 'var(--space-20)',
+        // 历史侧边栏宽度（产品扩展令牌，M3 补映射，用于主内容区让位）
+        sidebar: 'var(--w-sidebar)', 'sidebar-compact': 'var(--w-sidebar-compact)',
       },
       maxWidth: {
         container: 'var(--container)', command: 'var(--w-command)',
