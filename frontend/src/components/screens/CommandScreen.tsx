@@ -14,13 +14,14 @@ export type CommandScreenProps = Readonly<{
   onSubmit: (query?: string) => void;
   suggestions: ReadonlyArray<string>;
   inputRef: RefObject<HTMLTextAreaElement | null>;
+  blockedReason: string | null;
 }>;
 
 function Kbd({ children }: Readonly<{ children: string }>) {
   return <kbd className="rounded-xs bg-surface px-2 py-0.5 font-mono text-xs text-ink shadow-e1">{children}</kbd>;
 }
 
-export function CommandScreen({ draft, onDraftChange, onSubmit, suggestions, inputRef }: CommandScreenProps) {
+export function CommandScreen({ draft, onDraftChange, onSubmit, suggestions, inputRef, blockedReason }: CommandScreenProps) {
   return (
     <section aria-labelledby="brand-title" className="mx-auto w-full max-w-command px-5 pb-16 pt-12 md:pt-20">
       <div className="flex items-center gap-4">
@@ -42,6 +43,7 @@ export function CommandScreen({ draft, onDraftChange, onSubmit, suggestions, inp
           onSubmit={() => onSubmit()}
           inputRef={inputRef}
           autoFocus
+          blockedReason={blockedReason}
         />
       </div>
 

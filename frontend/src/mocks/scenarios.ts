@@ -1,5 +1,5 @@
 import type { SseEvent } from "@/types";
-import { MOCK_DONE, MOCK_RANKED, MOCK_RAW, trace } from "./fixtures";
+import { buildDone, MOCK_RANKED, MOCK_RAW, trace } from "./fixtures";
 
 // 一个场景 = 带延迟的事件脚本。delay 单位毫秒；事件 `null` 表示「此后不再发送任何数据」。
 
@@ -37,6 +37,15 @@ const head = (): ReadonlyArray<MockStep> => [
   { delay: 50, event: { type: "trace", data: trace("generating", "start", 1110, null, { model: "mock-model", sourceCount: 3 }) } },
 ];
 
+// hallucination 场景的完整正文。done 里的 citations 偏移按它计算（与后端一样针对原始 report）。
+// 正文里有两个指向信源 1 的 [1]，分别对应信源 1 里的两句，用来验证角标与高亮一一对应。
+const HALLUCINATION_PARTS: ReadonlyArray<string> = [
+  "## 结论\n\nFP8 内核在 Hopper 上的吞吐取决于调度方式 [1]，",
+  "这条引用不存在 [99]，这条引用是半截 [3",
+  "]。\n\n另一处结论同样来自第一个信源 [1]。",
+  "\n\n**未闭合的加粗和代码围栏：\n\n```openui-lang\nroot = Card(",
+];
+
 const token = (delta: string, delay = 120): MockStep => ({ delay, event: { type: "token", data: { delta } } });
 
 export function scenarioSteps(name: MockScenario): ReadonlyArray<MockStep> {
@@ -62,11 +71,9 @@ export function scenarioSteps(name: MockScenario): ReadonlyArray<MockStep> {
       // 带 [99] 幻觉角标和未闭合代码围栏的正文，之后正常 done
       return [
         ...head(),
-        token("## 结论\n\nFP8 内核在 Hopper 上的吞吐取决于调度方式 [1]，"),
-        token("这条引用不存在 [99]，这条引用是半截 [3"),
-        token("]。\n\n**未闭合的加粗和代码围栏：\n\n```openui-lang\nroot = Card("),
+        ...HALLUCINATION_PARTS.map((part) => token(part)),
         { delay: 100, event: { type: "trace", data: trace("generating", "end", 2000, 890, { firstTokenMs: 300, charCount: 120 }) } },
-        { delay: 50, event: { type: "done", data: MOCK_DONE } },
+        { delay: 50, event: { type: "done", data: buildDone(HALLUCINATION_PARTS.join("")) } },
       ];
   }
 }

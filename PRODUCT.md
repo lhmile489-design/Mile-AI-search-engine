@@ -159,7 +159,7 @@ type SearchLifecycleState = 'initial' | 'retrieving' | 'result'
 ### 7.1 检索接口
 
 - `POST /api/search/stream`，响应 `text/event-stream`
-- 请求体：`{ query: string, mode: 'academic' | 'code' | 'web' }`
+- 请求体（以 `docs/接口设计.md` §2.1 定稿为准）：`{ query: string, focusMode: 'academic' | 'code' | 'web', engine: 'tavily' | 'deepseek', scopeFilters: string[] }`；M3 前端固定传 `focusMode: "web"`、`engine` 取 `/api/config` 首个可用引擎、`scopeFilters: []`
 - 浏览器端用 `fetch` + `ReadableStream` 读取（`EventSource` 不支持 POST）
 
 ### 7.2 事件类型

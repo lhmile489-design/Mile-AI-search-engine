@@ -3,6 +3,7 @@
 import { useDeferredValue } from "react";
 import dynamic from "next/dynamic";
 import { TriangleAlert } from "lucide-react";
+import type { ActiveMarker } from "./MarkdownRenderer";
 
 // 研报面板：elevation-2，行宽 --measure（DESIGN.md §7）。
 // Markdown 渲染组件体积大，用 next/dynamic 懒加载（PRODUCT.md §9）。
@@ -28,8 +29,8 @@ export type ReportViewProps = Readonly<{
   generating: boolean;
   aborted: boolean;
   maxCitation: number;
-  activeCitation: number | null;
-  onCite: (index: number) => void;
+  activeCitation: ActiveMarker | null;
+  onCite: (index: number, markerStart: number | null) => void;
 }>;
 
 export function ReportView({ report, generating, aborted, maxCitation, activeCitation, onCite }: ReportViewProps) {

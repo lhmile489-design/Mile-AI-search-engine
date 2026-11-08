@@ -19,6 +19,8 @@ export type SuperbarProps = Readonly<{
   autoFocus?: boolean;
   label?: string;
   placeholder?: string;
+  /** 不能提交的原因（例如没有可用的检索引擎）。有值时提交按钮停用并显示该提示。 */
+  blockedReason?: string | null;
 }>;
 
 export function Superbar({
@@ -30,10 +32,12 @@ export function Superbar({
   autoFocus = false,
   label = "输入技术问题",
   placeholder = "输入一个技术问题，例如：FlashAttention-3 FP8 内核吞吐基准",
+  blockedReason = null,
 }: SuperbarProps) {
   const length = queryLength(value);
   const tooLong = length > MAX_QUERY_LENGTH;
-  const canSubmit = length >= 1 && !tooLong;
+  const blocked = blockedReason !== null;
+  const canSubmit = length >= 1 && !tooLong && !blocked;
 
   // 自动增高：先清掉旧高度再按 scrollHeight 设置
   useEffect(() => {
@@ -81,10 +85,18 @@ export function Superbar({
       <div className={cn("flex items-center justify-between gap-3", compact ? "mt-1" : "mt-2")}>
         <p
           id="superbar-limit"
-          className={cn("text-sm", tooLong ? "font-semibold text-danger" : "text-ink-muted", compact && !tooLong && "sr-only")}
-          role={tooLong ? "alert" : undefined}
+          className={cn(
+            "text-sm",
+            tooLong || blocked ? "font-semibold text-danger" : "text-ink-muted",
+            compact && !tooLong && !blocked && "sr-only",
+          )}
+          role={tooLong || blocked ? "alert" : undefined}
         >
-          {tooLong ? `问题最多 ${MAX_QUERY_LENGTH} 个字符，当前 ${length} 个，请精简后再提交` : "Enter 提交，Shift+Enter 换行"}
+          {blocked
+            ? blockedReason
+            : tooLong
+              ? `问题最多 ${MAX_QUERY_LENGTH} 个字符，当前 ${length} 个，请精简后再提交`
+              : "Enter 提交，Shift+Enter 换行"}
         </p>
         <Button type="submit" icon={ArrowUp} disabled={!canSubmit} aria-label="提交检索" className={compact ? "ml-auto" : undefined} />
       </div>

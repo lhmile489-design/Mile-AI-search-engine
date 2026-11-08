@@ -22,8 +22,10 @@ export type MarkdownRendererProps = Readonly<{
   text: string;
   /** 已有信源数；[n] 超出 [1, max] 时按纯文本显示 */
   maxCitation: number;
-  activeCitation: number | null;
-  onCite: (index: number) => void;
+  /** 当前被点击的角标：编号 + 它在原始 report 里的偏移，两者都一致的那一个角标才显示为激活 */
+  activeCitation: ActiveMarker | null;
+  /** markerStart 为该角标在原始 report 里的 UTF-16 偏移，识别不出时为 null */
+  onCite: (index: number, markerStart: number | null) => void;
   fenceRenderers?: Readonly<Record<string, FenceRenderer>>;
 }>;
 
@@ -35,22 +37,28 @@ function hastText(node: HastNode | undefined): string {
   return (node.children ?? []).map(hastText).join("");
 }
 
-type CitationContextValue = Readonly<{ active: number | null; onCite: (index: number) => void }>;
+export type ActiveMarker = Readonly<{ index: number; markerStart: number | null }>;
+
+type CitationContextValue = Readonly<{
+  active: ActiveMarker | null;
+  onCite: (index: number, markerStart: number | null) => void;
+}>;
 
 // 角标的「当前激活」和点击回调通过 context 传入，而不是闭包进 components：
 // components 里的组件类型必须保持稳定，否则每次点击角标都会让所有角标节点被卸载重建，
 // 键盘焦点随之丢失（Esc 关闭抽屉后焦点无法回到角标）。
 const CitationContext = createContext<CitationContextValue>({ active: null, onCite: () => {} });
 
-function CitationBadge({ index }: Readonly<{ index: number }>) {
+function CitationBadge({ index, markerStart }: Readonly<{ index: number; markerStart: number | null }>) {
   const { active, onCite } = useContext(CitationContext);
-  const isActive = active === index;
+  // 精确对应：编号和偏移都一致才是「被点击的那一个」，同一信源的其他角标不跟着亮
+  const isActive = active !== null && active.index === index && active.markerStart === markerStart;
   return (
     <button
       type="button"
       aria-label={`查看第 ${index} 个信源`}
       aria-pressed={isActive}
-      onClick={() => onCite(index)}
+      onClick={() => onCite(index, markerStart)}
       className={cn(
         "mx-0.5 inline-block min-w-5 cursor-pointer rounded-xs px-1 text-center align-baseline font-body text-xs font-bold leading-snug",
         isActive ? "bg-accent text-accent-on" : "bg-accent-soft text-accent-soft-ink hover:bg-accent-tint-press",
@@ -79,7 +87,9 @@ function MarkdownRendererImpl({ text, maxCitation, activeCitation, onCite, fence
         const raw = (props as Record<string, unknown>)["data-cite"];
         const index = Number(raw);
         if (!Number.isSafeInteger(index)) return <span>{props.children}</span>;
-        return <CitationBadge index={index} />;
+        const pos = (props as Record<string, unknown>)["data-pos"];
+        const markerStart = pos === undefined ? null : Number(pos);
+        return <CitationBadge index={index} markerStart={Number.isSafeInteger(markerStart) ? markerStart : null} />;
       },
       a: ({ node, ...props }: ComponentPropsWithoutRef<"a"> & ExtraProps) => {
         void node; // react-markdown 会传入 hast 节点，不能落到 DOM 上

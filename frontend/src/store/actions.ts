@@ -14,7 +14,7 @@ export type SearchAction =
   | Readonly<{ type: "ABORT" }>
   | Readonly<{ type: "NEW_SEARCH" }>
   | Readonly<{ type: "RESTORE"; detail: HistoryDetail }>
-  | Readonly<{ type: "OPEN_CITATION"; index: number }>
+  | Readonly<{ type: "OPEN_CITATION"; index: number; markerStart: number | null }>
   | Readonly<{ type: "OPEN_DRAWER" }>
   | Readonly<{ type: "CLOSE_DRAWER" }>
   /** 非流式错误（配置拉取失败、历史恢复失败等）的提示条 */

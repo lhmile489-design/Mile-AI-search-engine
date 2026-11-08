@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
-import { collectRanges, splitPassage } from "@/lib/highlight";
-import type { Citation, SourceCard } from "@/types";
+import { splitPassage, type Range } from "@/lib/highlight";
+import type { SourceCard } from "@/types";
 import { CategoryTag } from "./CategoryTag";
 import { Favicon } from "./Favicon";
 
@@ -15,14 +15,15 @@ import { Favicon } from "./Favicon";
 
 export type SourceCardViewProps = Readonly<{
   source: SourceCard;
-  citations: ReadonlyArray<Citation>;
+  /** 只有被点击角标对应的那一句（0 或 1 个区间），其余信源不高亮 */
+  ranges: ReadonlyArray<Range>;
   active: boolean;
   /** 每次点击角标 +1，用来在同一张卡片上重复触发展开 */
   activeNonce: number;
   categoryLabel: (category: string) => string;
 }>;
 
-export function SourceCardView({ source, citations, active, activeNonce, categoryLabel }: SourceCardViewProps) {
+export function SourceCardView({ source, ranges, active, activeNonce, categoryLabel }: SourceCardViewProps) {
   const [expanded, setExpanded] = useState(false);
   const date = formatDate(source.publishedAt);
   const passage = source.passage;
@@ -33,9 +34,9 @@ export function SourceCardView({ source, citations, active, activeNonce, categor
   }, [active, activeNonce]);
 
   const segments = useMemo(() => {
-    if (!passage || source.index === null) return null;
-    return splitPassage(passage, collectRanges(citations, source.index, passage.length));
-  }, [passage, source.index, citations]);
+    if (!passage) return null;
+    return splitPassage(passage, ranges);
+  }, [passage, ranges]);
 
   const hasMark = segments?.some((segment) => segment.marked) ?? false;
 

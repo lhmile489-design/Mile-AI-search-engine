@@ -24,6 +24,10 @@ export function SearchApp() {
   const desktop = useMediaQuery("(min-width: 1024px)");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // config 已拿到、但没有任何已配置的引擎：提交按钮停用并说明原因（config 没拿到不算，那是连接问题）
+  const blockedReason =
+    boot.config !== null && boot.engine === null ? "没有可用的检索引擎，请检查后端密钥配置" : null;
+
   const toggleSidebar = useCallback(() => setSidebarOpen((open) => !open), []);
 
   // 全局快捷键（PRODUCT.md §6）：Ctrl/Cmd+K、Ctrl/Cmd+B、Esc 在输入框内也生效，并 preventDefault
@@ -74,7 +78,10 @@ export function SearchApp() {
     [dispatch, history],
   );
 
-  const handleCite = useCallback((index: number) => dispatch({ type: "OPEN_CITATION", index }), [dispatch]);
+  const handleCite = useCallback(
+    (index: number, markerStart: number | null) => dispatch({ type: "OPEN_CITATION", index, markerStart }),
+    [dispatch],
+  );
   const handleOpenDrawer = useCallback(() => dispatch({ type: "OPEN_DRAWER" }), [dispatch]);
   const handleCloseDrawer = useCallback(() => dispatch({ type: "CLOSE_DRAWER" }), [dispatch]);
 
@@ -106,6 +113,7 @@ export function SearchApp() {
               onDraftChange={controller.setDraft}
               onSubmit={(query) => void controller.submit(query)}
               suggestions={boot.suggestions}
+              blockedReason={blockedReason}
               inputRef={inputRef}
             />
           </ErrorBoundary>
@@ -128,6 +136,7 @@ export function SearchApp() {
               onCloseDrawer={handleCloseDrawer}
               categoryLabel={boot.categoryLabel}
               inputRef={inputRef}
+              blockedReason={blockedReason}
             />
           </ErrorBoundary>
         ) : null}

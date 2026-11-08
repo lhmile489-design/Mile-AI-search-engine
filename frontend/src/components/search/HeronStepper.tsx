@@ -2,7 +2,8 @@ import { cn } from "@/lib/cn";
 import { formatMs } from "@/lib/format";
 import type { StepName } from "@/types";
 import { STEP_ORDER } from "@/types";
-import type { SearchState, StepState, StepStatus } from "@/store/state";
+import { Badge } from "@/components/ui/Badge";
+import { isReplayingCache, type SearchState, type StepState, type StepStatus } from "@/store/state";
 
 // HeronStepper 步骤时间轴：DESIGN.md §7。四个阶段，每步显示状态与后端给出的毫秒耗时。
 
@@ -85,9 +86,14 @@ export type HeronStepperProps = Readonly<{
 }>;
 
 export function HeronStepper({ steps, rewrittenQueries }: HeronStepperProps) {
+  // 全部已开始的阶段都命中缓存 = 缓存回放；只有个别阶段命中（子检索词缓存）则由阶段自己标注
+  const replay = isReplayingCache(steps);
   return (
     <section aria-label="检索进度" className="rounded-card bg-surface px-6 py-7 shadow-e2">
-      <h2 className="font-display text-lg font-bold">检索进度</h2>
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="font-display text-lg font-bold">检索进度</h2>
+        {replay ? <Badge>缓存命中</Badge> : null}
+      </div>
       <ol className="mt-6 ml-1">
         {STEP_ORDER.map((name, i) => {
           const step = steps[name];
@@ -108,6 +114,7 @@ export function HeronStepper({ steps, rewrittenQueries }: HeronStepperProps) {
                   <p className="text-ui font-semibold text-ink">{LABELS[name]}</p>
                   <p className={cn("text-sm font-semibold", STATUS_COLOR[step.status])}>
                     {STATUS_TEXT[step.status]}
+                    {step.cacheHit && !replay ? "（缓存命中）" : ""}
                   </p>
                 </div>
                 <p className="shrink-0 text-right font-mono text-sm tabular-nums text-ink-soft">

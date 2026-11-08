@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { DoneEvent, HistoryDetail, SseEvent, SourceCard, TraceEvent } from "@/types";
 import type { SearchAction } from "../actions";
 import { escapeAction, searchReducer } from "../reducer";
-import { initialState, type SearchState } from "../state";
+import { initialState, isReplayingCache, type SearchState } from "../state";
 
 // ---- 构造辅助 ----
 
@@ -378,11 +378,11 @@ describe("恢复历史", () => {
 describe("证据抽屉与 Esc 决策", () => {
   it("点击角标：打开抽屉，nonce 每次递增（同一个角标连点也能再次定位）", () => {
     const g = generating();
-    const a = searchReducer(g, { type: "OPEN_CITATION", index: 2 });
-    const b = searchReducer(a, { type: "OPEN_CITATION", index: 2 });
+    const a = searchReducer(g, { type: "OPEN_CITATION", index: 2, markerStart: 7 });
+    const b = searchReducer(a, { type: "OPEN_CITATION", index: 2, markerStart: 7 });
     expect(a.drawerOpen).toBe(true);
-    expect(a.activeCitation).toEqual({ index: 2, nonce: 1 });
-    expect(b.activeCitation).toEqual({ index: 2, nonce: 2 });
+    expect(a.activeCitation).toEqual({ index: 2, markerStart: 7, nonce: 1 });
+    expect(b.activeCitation).toEqual({ index: 2, markerStart: 7, nonce: 2 });
   });
 
   it("escapeAction 三种行为", () => {
@@ -391,7 +391,7 @@ describe("证据抽屉与 Esc 决策", () => {
     expect(escapeAction(submitted)).toBe("abort");
 
     const g = generating();
-    const withDrawer = searchReducer(g, { type: "OPEN_CITATION", index: 1 });
+    const withDrawer = searchReducer(g, { type: "OPEN_CITATION", index: 1, markerStart: null });
     // 生成中：Esc 是停止，哪怕抽屉开着
     expect(escapeAction(withDrawer)).toBe("abort");
 
@@ -415,5 +415,60 @@ describe("证据抽屉与 Esc 决策", () => {
       phases.add(s.phase);
     }
     expect([...phases].every((p) => ["initial", "retrieving", "result"].includes(p))).toBe(true);
+  });
+});
+
+describe("缓存命中标注（F20）", () => {
+  const cachedTrace = (step: TraceEvent["step"], status: TraceEvent["status"], elapsedMs: number | null): SseEvent => ({
+    type: "trace",
+    data: { step, status, atMs: 0, elapsedMs, message: "", detail: null, cacheHit: true },
+  });
+
+  it("trace.cacheHit 记到对应阶段；耗时照用事件里的 elapsedMs，不改写", () => {
+    const s = run([
+      { type: "SUBMIT", query: "q" },
+      ev(1, cachedTrace("rewriting", "start", null)),
+      ev(1, cachedTrace("rewriting", "end", 3)),
+      ev(1, trace("searching", "start", null)),
+    ]);
+    expect(s.steps.rewriting).toMatchObject({ cacheHit: true, elapsedMs: 3 });
+    expect(s.steps.searching.cacheHit).toBe(false);
+  });
+
+  it("isReplayingCache：已开始的阶段全部命中才算回放；只有部分命中不算", () => {
+    const all = run([
+      { type: "SUBMIT", query: "q" },
+      ev(1, cachedTrace("rewriting", "start", null)),
+      ev(1, cachedTrace("rewriting", "end", 1)),
+      ev(1, cachedTrace("searching", "start", null)),
+    ]);
+    expect(isReplayingCache(all.steps)).toBe(true);
+    const partial = run(
+      [ev(1, trace("reasoning", "start", null))],
+      all,
+    );
+    expect(isReplayingCache(partial.steps)).toBe(false);
+    expect(isReplayingCache(initialState.steps)).toBe(false);
+  });
+
+  it("done.cacheHit 决定整次结果；没有命中时为 false", () => {
+    const g = generating();
+    expect(searchReducer(g, ev(g.runId, { type: "done", data: { ...DONE, cacheHit: true, latencyMs: 12 } })).cacheHit).toBe(true);
+    const miss = searchReducer(g, ev(g.runId, { type: "done", data: DONE }));
+    expect(miss.cacheHit).toBe(false);
+    expect(miss.latencyMs).toBe(1234);
+  });
+
+  it("新检索清掉上一次的缓存标记", () => {
+    const g = generating();
+    const hit = searchReducer(g, ev(g.runId, { type: "done", data: { ...DONE, cacheHit: true } }));
+    expect(searchReducer(hit, { type: "SUBMIT", query: "新" }).cacheHit).toBe(false);
+  });
+
+  it("历史快照：有 cacheHit 字段就还原，缺失就不显示，不猜", () => {
+    expect(searchReducer(initialState, { type: "RESTORE", detail: { ...DETAIL, cacheHit: true } }).cacheHit).toBe(true);
+    expect(searchReducer(initialState, { type: "RESTORE", detail: { ...DETAIL, cacheHit: false } }).cacheHit).toBe(false);
+    const missing = Object.fromEntries(Object.entries(DETAIL).filter(([key]) => key !== "cacheHit"));
+    expect(searchReducer(initialState, { type: "RESTORE", detail: missing as unknown as HistoryDetail }).cacheHit).toBe(false);
   });
 });

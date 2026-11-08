@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatCount } from "@/lib/format";
+import { rangeForMarker, type Range } from "@/lib/highlight";
 import type { Citation, SourceCard } from "@/types";
 import { SourceCardView } from "./SourceCardView";
 
@@ -15,13 +16,15 @@ import { SourceCardView } from "./SourceCardView";
 export type EvidenceDrawerProps = Readonly<{
   sources: ReadonlyArray<SourceCard>;
   citations: ReadonlyArray<Citation>;
-  activeCitation: Readonly<{ index: number; nonce: number }> | null;
+  activeCitation: Readonly<{ index: number; markerStart: number | null; nonce: number }> | null;
   /** 覆盖式抽屉是否打开（桌面内嵌形态下忽略） */
   open: boolean;
   desktop: boolean;
   onClose: () => void;
   categoryLabel: (category: string) => string;
 }>;
+
+const NO_RANGES: ReadonlyArray<Range> = [];
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -101,7 +104,11 @@ export function EvidenceDrawer({
                 <SourceCardView
                   key={source.id}
                   source={source}
-                  citations={citations}
+                  ranges={
+                    activeCitation && activeCitation.index === source.index && source.passage
+                      ? rangeForMarker(citations, source.index, activeCitation.markerStart, source.passage.length)
+                      : NO_RANGES
+                  }
                   active={activeCitation?.index === source.index}
                   activeNonce={activeCitation?.nonce ?? 0}
                   categoryLabel={categoryLabel}

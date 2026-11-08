@@ -54,23 +54,48 @@ export function trace(
   return { step, status, atMs, elapsedMs, message: "", detail, cacheHit: false };
 }
 
-export const MOCK_DONE: DoneEvent = {
-  historyId: null,
-  latencyMs: 4200,
-  stageTimings: { rewritingMs: 800, searchingMs: 1200, reasoningMs: 50, generatingMs: 2000, finalizingMs: 150 },
-  firstTokenMs: 300,
-  tokenStats: null,
-  citations: [
-    // 偏移指向 PASSAGES[0] 中「FP8 内核在 Hopper 上的吞吐取决于张量核心的调度方式。」
-    { index: 1, markerStart: 20, markerEnd: 23, sentenceStart: 0, sentenceEnd: 23, highlight: { start: 8, end: 40, score: 0.5 } },
-    { index: 2, markerStart: 40, markerEnd: 43, sentenceStart: 24, sentenceEnd: 43, highlight: { start: 16, end: 52, score: 0.4 } },
-  ],
-  takeaways: null,
-  consensus: null,
-  engine: "tavily",
-  enginesUsed: ["tavily"],
-  degraded: false,
-  sourceCount: MOCK_RANKED.length,
-  charCount: 0,
-  cacheHit: false,
-};
+/**
+ * 按给定的研报正文生成 done 事件：citations 的 markerStart 取自正文里 [n] 的真实 UTF-16 下标，
+ * 和后端的口径一致（偏移针对原始 report）。highlight 指向 PASSAGES 里写死的句子区间。
+ */
+export function buildDone(report: string): DoneEvent {
+  const first = PASSAGES[0] ?? "";
+  const second = first.indexOf("后面");
+  const ranges: ReadonlyArray<{ start: number; end: number }> = [
+    { start: first.indexOf("FP8"), end: second },
+    { start: second, end: first.length },
+  ];
+  let seen = 0;
+  const citations = [...report.matchAll(/\[(\d+)\]/g)]
+    .filter((m) => Number(m[1]) >= 1 && Number(m[1]) <= MOCK_RANKED.length)
+    .map((m) => {
+      const index = Number(m[1]);
+      const start = m.index ?? 0;
+      // 只有信源 1 带高亮：第一个 [1] 指向第一句，第二个 [1] 指向第二句
+      const range = index === 1 ? ranges[Math.min(seen++, ranges.length - 1)] : undefined;
+      return {
+        index,
+        markerStart: start,
+        markerEnd: start + m[0].length,
+        sentenceStart: 0,
+        sentenceEnd: start + m[0].length,
+        highlight: range ? { ...range, score: 0.5 } : null,
+      };
+    });
+  return {
+    historyId: null,
+    latencyMs: 4200,
+    stageTimings: { rewritingMs: 800, searchingMs: 1200, reasoningMs: 50, generatingMs: 2000, finalizingMs: 150 },
+    firstTokenMs: 300,
+    tokenStats: null,
+    citations,
+    takeaways: null,
+    consensus: null,
+    engine: "tavily",
+    enginesUsed: ["tavily"],
+    degraded: false,
+    sourceCount: MOCK_RANKED.length,
+    charCount: report.length,
+    cacheHit: false,
+  };
+}

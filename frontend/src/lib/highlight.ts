@@ -6,30 +6,23 @@ import type { Citation } from "@/types";
 export type PassageSegment = Readonly<{ text: string; marked: boolean }>;
 export type Range = Readonly<{ start: number; end: number }>;
 
-/** 取出被引用编号 index 的全部高亮区间，裁剪到 [0, length]，丢弃空区间，合并重叠区间。 */
-export function collectRanges(
+/**
+ * 找出「被点击的那个角标」对应的高亮区间：index 相同且 markerStart 相同的那一条 citation。
+ * 同一信源下的其他句子不高亮。markerStart 为 null（识别不出偏移）、citations 里没有对应条目、
+ * highlight 为 null 时返回空数组，调用方只高亮卡片。区间裁剪到 [0, length]，空区间丢弃。
+ */
+export function rangeForMarker(
   citations: ReadonlyArray<Citation>,
   index: number,
+  markerStart: number | null,
   length: number,
 ): ReadonlyArray<Range> {
-  const raw: Range[] = [];
-  for (const citation of citations) {
-    if (citation.index !== index || !citation.highlight) continue;
-    const start = Math.max(0, Math.min(citation.highlight.start, length));
-    const end = Math.max(0, Math.min(citation.highlight.end, length));
-    if (end > start) raw.push({ start, end });
-  }
-  raw.sort((a, b) => a.start - b.start);
-  const merged: Range[] = [];
-  for (const range of raw) {
-    const last = merged[merged.length - 1];
-    if (last && range.start <= last.end) {
-      merged[merged.length - 1] = { start: last.start, end: Math.max(last.end, range.end) };
-    } else {
-      merged.push(range);
-    }
-  }
-  return merged;
+  if (markerStart === null) return [];
+  const hit = citations.find((c) => c.index === index && c.markerStart === markerStart);
+  if (!hit?.highlight) return [];
+  const start = Math.max(0, Math.min(hit.highlight.start, length));
+  const end = Math.max(0, Math.min(hit.highlight.end, length));
+  return end > start ? [{ start, end }] : [];
 }
 
 /** 把 passage 按区间切成 [普通, 高亮, 普通, ...]；没有区间时返回单段普通文本。 */

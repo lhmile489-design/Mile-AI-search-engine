@@ -27,6 +27,8 @@ export type StepState = Readonly<{
   degraded: Readonly<{ from: string; to: string }> | null;
   /** trace.detail 原样保留，展示层按 step 读取 */
   detail: Readonly<Record<string, unknown>> | null;
+  /** trace.cacheHit：该阶段是否命中缓存（L1 只会让个别阶段为 true，L2 回放则全部为 true） */
+  cacheHit: boolean;
 }>;
 
 /** 提示条内容：原因 + 下一步（PRODUCT.md §8），retryable 决定是否显示「重试」 */
@@ -67,6 +69,8 @@ export type SearchState = Readonly<{
   consensus: Consensus | null;
   tokenStats: TokenStats | null;
   done: DoneEvent | null;
+  /** 整次结果是否为缓存回放：来自 done.cacheHit 或历史快照的 cacheHit，不自己推断 */
+  cacheHit: boolean;
   restoredFromHistory: boolean;
   /** 每次 done 或删除历史后 +1，历史侧边栏据此刷新 */
   historyVersion: number;
@@ -74,10 +78,14 @@ export type SearchState = Readonly<{
   // 证据抽屉
   drawerOpen: boolean;
   /** nonce 每次点击 +1，同一个角标连点也能重新触发滚动 */
-  activeCitation: Readonly<{ index: number; nonce: number }> | null;
+  /**
+   * 当前被点击的角标。markerStart 是该角标在后端下发的原始 report 里的 UTF-16 偏移，
+   * 用它在 citations 里精确找到对应的那一条；识别不出偏移时为 null。
+   */
+  activeCitation: Readonly<{ index: number; markerStart: number | null; nonce: number }> | null;
 }>;
 
-const IDLE_STEP: StepState = { status: "idle", elapsedMs: null, degraded: null, detail: null };
+const IDLE_STEP: StepState = { status: "idle", elapsedMs: null, degraded: null, detail: null, cacheHit: false };
 
 export function createIdleSteps(): Record<StepName, StepState> {
   const steps = {} as Record<StepName, StepState>;
@@ -107,6 +115,7 @@ export const initialState: SearchState = {
   consensus: null,
   tokenStats: null,
   done: null,
+  cacheHit: false,
   restoredFromHistory: false,
   historyVersion: 0,
   drawerOpen: false,
@@ -134,6 +143,7 @@ export function clearRun(state: SearchState): SearchState {
     consensus: null,
     tokenStats: null,
     done: null,
+    cacheHit: false,
     restoredFromHistory: false,
     drawerOpen: false,
     activeCitation: null,
@@ -141,3 +151,12 @@ export function clearRun(state: SearchState): SearchState {
 }
 
 export type { HistoryDetail };
+
+/**
+ * 检索推理态是否在展示缓存回放：至少有一个阶段已开始，且所有已开始的阶段都标了 cacheHit。
+ * 只有部分阶段命中（L1 子检索词缓存）时返回 false，由各阶段自己的标签表达。
+ */
+export function isReplayingCache(steps: SearchState["steps"]): boolean {
+  const started = STEP_ORDER.map((name) => steps[name]).filter((step) => step.status !== "idle");
+  return started.length > 0 && started.every((step) => step.cacheHit);
+}

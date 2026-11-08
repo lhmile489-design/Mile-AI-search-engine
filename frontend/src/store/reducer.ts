@@ -35,13 +35,14 @@ function applyTrace(state: SearchState, trace: TraceEvent): SearchState {
   const detail = trace.detail ?? null;
   switch (trace.status) {
     case "start":
-      return updateStep(state, trace.step, { status: "running", detail });
+      return updateStep(state, trace.step, { status: "running", detail, cacheHit: trace.cacheHit === true });
     case "end": {
       // 耗时只信后端的 elapsedMs
       let next = updateStep(state, trace.step, {
         status: "done",
         elapsedMs: trace.elapsedMs,
         detail,
+        cacheHit: trace.cacheHit === true,
       });
       if (trace.step === "rewriting") {
         next = { ...next, rewrittenQueries: stringList(detail?.queries) };
@@ -55,6 +56,7 @@ function applyTrace(state: SearchState, trace: TraceEvent): SearchState {
       return updateStep(state, trace.step, {
         status: current.status === "idle" ? "running" : current.status,
         degraded: { from, to },
+        cacheHit: current.cacheHit || trace.cacheHit === true,
       });
     }
   }
@@ -130,6 +132,7 @@ function applyStreamEvent(state: SearchState, event: Extract<SearchAction, { typ
         consensus: done.consensus,
         tokenStats: done.tokenStats,
         done,
+        cacheHit: done.cacheHit === true,
         historyVersion: state.historyVersion + 1,
       };
     }
@@ -150,7 +153,7 @@ function applySnapshot(state: SearchState, detail: HistoryDetail): SearchState {
   const steps = createIdleSteps();
   for (const name of STEP_ORDER) {
     const ms = timings[TIMING_KEYS[name]];
-    if (typeof ms === "number") steps[name] = { status: "done", elapsedMs: ms, degraded: null, detail: null };
+    if (typeof ms === "number") steps[name] = { status: "done", elapsedMs: ms, degraded: null, detail: null, cacheHit: false };
   }
   const hasTimings = typeof timings.rewritingMs === "number";
   return {
@@ -171,6 +174,8 @@ function applySnapshot(state: SearchState, detail: HistoryDetail): SearchState {
     takeaways: detail.takeaways,
     consensus: detail.consensus,
     tokenStats: detail.tokenStats,
+    // 快照里没有该字段就当作未命中，不猜
+    cacheHit: detail.cacheHit === true,
     restoredFromHistory: true,
     historyVersion: state.historyVersion,
   };
@@ -229,7 +234,11 @@ export function searchReducer(state: SearchState, action: SearchAction): SearchS
       return {
         ...state,
         drawerOpen: true,
-        activeCitation: { index: action.index, nonce: (state.activeCitation?.nonce ?? 0) + 1 },
+        activeCitation: {
+          index: action.index,
+          markerStart: action.markerStart,
+          nonce: (state.activeCitation?.nonce ?? 0) + 1,
+        },
       };
 
     case "OPEN_DRAWER":
