@@ -6,7 +6,7 @@ import { ApiError } from "@/lib/http";
 import type { StreamHandle } from "@/lib/sse";
 import { resolveOpenStream } from "@/lib/transport";
 import { useBootData, type BootData } from "@/hooks/useBootData";
-import type { SearchRequest } from "@/types";
+import type { FocusMode, SearchRequest, SourceCategory } from "@/types";
 import type { UiError, SearchState } from "./state";
 import type { SearchAction } from "./actions";
 import { escapeAction } from "./reducer";
@@ -34,6 +34,9 @@ export type SearchController = Readonly<{
   restore: (id: string) => Promise<void>;
   /** Esc：检索中 / 生成中停止；结果页已完成时关闭覆盖式抽屉。返回是否处理了按键。 */
   handleEscape: () => boolean;
+  setFocusMode: (focusMode: FocusMode) => void;
+  setScopeFilters: (scopeFilters: ReadonlyArray<SourceCategory>) => void;
+  setEngine: (engine: string) => void;
 }>;
 
 function showError(dispatch: (action: SearchAction) => void, title: string, hint: string, retryable = false): void {
@@ -118,7 +121,8 @@ export function useSearchController(): SearchController {
       const length = queryLength(query);
       if (length < 1 || length > MAX_QUERY_LENGTH) return;
 
-      let engine = bootRef.current.engine;
+      // F22：优先用用户在 Superbar 里选的引擎；没选过就从 /api/config 取第一个可用
+      let engine = getState().engine ?? bootRef.current.engine;
       if (!engine) {
         const config = await bootRef.current.reloadConfig();
         if (!config) {
@@ -143,9 +147,11 @@ export function useSearchController(): SearchController {
         return;
       }
 
+      // F15 / F21：沿用用户当前选择，不写死
+      const { focusMode, scopeFilters } = getState();
       stopStream(); // 同一时刻最多一个检索：先中止旧连接
       dispatch({ type: "SUBMIT", query });
-      await startRun({ query, focusMode: "web", engine, scopeFilters: [] });
+      await startRun({ query, focusMode, engine, scopeFilters: [...scopeFilters] });
     },
     [dispatch, getState, startRun, stopStream],
   );
@@ -195,6 +201,15 @@ export function useSearchController(): SearchController {
   }, [abort, dispatch, getState]);
 
   const setDraft = useCallback((draft: string) => dispatch({ type: "DRAFT_CHANGED", draft }), [dispatch]);
+  const setFocusMode = useCallback(
+    (focusMode: FocusMode) => dispatch({ type: "SET_FOCUS_MODE", focusMode }),
+    [dispatch],
+  );
+  const setScopeFilters = useCallback(
+    (scopeFilters: ReadonlyArray<SourceCategory>) => dispatch({ type: "SET_SCOPE_FILTERS", scopeFilters }),
+    [dispatch],
+  );
+  const setEngine = useCallback((engine: string) => dispatch({ type: "SET_ENGINE", engine }), [dispatch]);
 
-  return { state, boot, dispatch, setDraft, submit, retry, abort, newSearch, restore, handleEscape };
+  return { state, boot, dispatch, setDraft, submit, retry, abort, newSearch, restore, handleEscape, setFocusMode, setScopeFilters, setEngine };
 }

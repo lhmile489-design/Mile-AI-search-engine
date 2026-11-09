@@ -115,6 +115,13 @@ export function SearchApp() {
               suggestions={boot.suggestions}
               blockedReason={blockedReason}
               inputRef={inputRef}
+              config={boot.config}
+              focusMode={state.focusMode}
+              scopeFilters={state.scopeFilters}
+              engine={state.engine}
+              onFocusModeChange={controller.setFocusMode}
+              onScopeFiltersChange={controller.setScopeFilters}
+              onEngineChange={controller.setEngine}
             />
           </ErrorBoundary>
         ) : null}
@@ -137,6 +144,10 @@ export function SearchApp() {
               categoryLabel={boot.categoryLabel}
               inputRef={inputRef}
               blockedReason={blockedReason}
+              config={boot.config}
+              onFocusModeChange={controller.setFocusMode}
+              onScopeFiltersChange={controller.setScopeFilters}
+              onEngineChange={controller.setEngine}
             />
           </ErrorBoundary>
         ) : null}

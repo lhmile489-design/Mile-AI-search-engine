@@ -2,9 +2,11 @@ import type {
   Citation,
   Consensus,
   DoneEvent,
+  FocusMode,
   HistoryDetail,
   RawSource,
   SourceCard,
+  SourceCategory,
   StageTimings,
   StepName,
   Takeaway,
@@ -48,6 +50,12 @@ export type SearchState = Readonly<{
   query: string;
   /** 每次提交 / 中止 / 恢复 +1。流事件携带发起时的 runId，不匹配就丢弃（迟到事件） */
   runId: number;
+
+  // F15 / F21 / F22：用户当前选择的检索参数，提交时透传给后端
+  focusMode: FocusMode;
+  scopeFilters: ReadonlyArray<SourceCategory>;
+  /** 当前选中的引擎；null = 未选（提交时从 /api/config 取第一个可用） */
+  engine: string | null;
 
   steps: Readonly<Record<StepName, StepState>>;
   rewrittenQueries: ReadonlyArray<string>;
@@ -98,6 +106,9 @@ export const initialState: SearchState = {
   draft: "",
   query: "",
   runId: 0,
+  focusMode: "web",
+  scopeFilters: [],
+  engine: null,
   steps: createIdleSteps(),
   rewrittenQueries: [],
   rawSources: [],

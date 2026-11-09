@@ -1,4 +1,4 @@
-import type { HistoryDetail, SseEvent } from "@/types";
+import type { FocusMode, HistoryDetail, SourceCategory, SseEvent } from "@/types";
 import type { StreamFailure } from "@/lib/sse";
 import type { UiError } from "./state";
 
@@ -20,4 +20,8 @@ export type SearchAction =
   /** 非流式错误（配置拉取失败、历史恢复失败等）的提示条 */
   | Readonly<{ type: "SHOW_ERROR"; error: UiError }>
   | Readonly<{ type: "DISMISS_ERROR" }>
-  | Readonly<{ type: "HISTORY_CHANGED" }>;
+  | Readonly<{ type: "HISTORY_CHANGED" }>
+  // F15 / F21 / F22：检索参数选择（state 持久，新检索 / 恢复历史时保留，方便「沿用当前设置再搜」）
+  | Readonly<{ type: "SET_FOCUS_MODE"; focusMode: FocusMode }>
+  | Readonly<{ type: "SET_SCOPE_FILTERS"; scopeFilters: ReadonlyArray<SourceCategory> }>
+  | Readonly<{ type: "SET_ENGINE"; engine: string }>;

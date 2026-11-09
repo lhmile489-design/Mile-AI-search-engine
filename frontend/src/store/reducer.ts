@@ -255,6 +255,15 @@ export function searchReducer(state: SearchState, action: SearchAction): SearchS
 
     case "HISTORY_CHANGED":
       return { ...state, historyVersion: state.historyVersion + 1 };
+
+    case "SET_FOCUS_MODE":
+      return { ...state, focusMode: action.focusMode };
+
+    case "SET_SCOPE_FILTERS":
+      return { ...state, scopeFilters: action.scopeFilters };
+
+    case "SET_ENGINE":
+      return { ...state, engine: action.engine };
   }
 }
 

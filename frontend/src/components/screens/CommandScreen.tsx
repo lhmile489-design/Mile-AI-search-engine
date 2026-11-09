@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import { Search } from "lucide-react";
 import { Chip } from "@/components/ui/Chip";
 import { Superbar } from "@/components/search/Superbar";
+import type { AppConfig, FocusMode, SourceCategory } from "@/types";
 
 // 屏幕 1：首屏命令台（PRODUCT.md §4.1）。内容只有三样：品牌、Superbar、推荐问题。
 // 快捷键说明用小字展示一次，不弹窗（§6）。
@@ -15,13 +16,34 @@ export type CommandScreenProps = Readonly<{
   suggestions: ReadonlyArray<string>;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   blockedReason: string | null;
+  config: AppConfig | null;
+  focusMode: FocusMode;
+  scopeFilters: ReadonlyArray<SourceCategory>;
+  engine: string | null;
+  onFocusModeChange: (mode: FocusMode) => void;
+  onScopeFiltersChange: (next: ReadonlyArray<SourceCategory>) => void;
+  onEngineChange: (engine: string) => void;
 }>;
 
 function Kbd({ children }: Readonly<{ children: string }>) {
   return <kbd className="rounded-xs bg-surface px-2 py-0.5 font-mono text-xs text-ink shadow-e1">{children}</kbd>;
 }
 
-export function CommandScreen({ draft, onDraftChange, onSubmit, suggestions, inputRef, blockedReason }: CommandScreenProps) {
+export function CommandScreen({
+  draft,
+  onDraftChange,
+  onSubmit,
+  suggestions,
+  inputRef,
+  blockedReason,
+  config,
+  focusMode,
+  scopeFilters,
+  engine,
+  onFocusModeChange,
+  onScopeFiltersChange,
+  onEngineChange,
+}: CommandScreenProps) {
   return (
     <section aria-labelledby="brand-title" className="mx-auto w-full max-w-command px-5 pb-16 pt-12 md:pt-20">
       <div className="flex items-center gap-4">
@@ -44,6 +66,13 @@ export function CommandScreen({ draft, onDraftChange, onSubmit, suggestions, inp
           inputRef={inputRef}
           autoFocus
           blockedReason={blockedReason}
+          config={config}
+          focusMode={focusMode}
+          scopeFilters={scopeFilters}
+          engine={engine}
+          onFocusModeChange={onFocusModeChange}
+          onScopeFiltersChange={onScopeFiltersChange}
+          onEngineChange={onEngineChange}
         />
       </div>
 

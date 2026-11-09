@@ -5,6 +5,9 @@ import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { MAX_QUERY_LENGTH, queryLength } from "@/store/useSearchController";
+import type { AppConfig, FocusMode, SourceCategory } from "@/types";
+import { EnginePicker, FocusModePicker } from "./SearchPickers";
+import { ScopeFilterMenu } from "./ScopeFilterMenu";
 
 // Superbar：DESIGN.md §6.2。多行输入，Enter 提交，Shift+Enter 换行。
 // 去首尾空白后 1-500 字符；超长要有提示，空问题时提交按钮停用。
@@ -21,6 +24,15 @@ export type SuperbarProps = Readonly<{
   placeholder?: string;
   /** 不能提交的原因（例如没有可用的检索引擎）。有值时提交按钮停用并显示该提示。 */
   blockedReason?: string | null;
+
+  // F15 / F21 / F22：检索参数控件。config 为 null（/api/config 还没拿到）时整块不显示。
+  config?: AppConfig | null;
+  focusMode?: FocusMode;
+  scopeFilters?: ReadonlyArray<SourceCategory>;
+  engine?: string | null;
+  onFocusModeChange?: (mode: FocusMode) => void;
+  onScopeFiltersChange?: (next: ReadonlyArray<SourceCategory>) => void;
+  onEngineChange?: (engine: string) => void;
 }>;
 
 export function Superbar({
@@ -33,6 +45,13 @@ export function Superbar({
   label = "输入技术问题",
   placeholder = "输入一个技术问题，例如：FlashAttention-3 FP8 内核吞吐基准",
   blockedReason = null,
+  config = null,
+  focusMode = "web",
+  scopeFilters = [],
+  engine = null,
+  onFocusModeChange,
+  onScopeFiltersChange,
+  onEngineChange,
 }: SuperbarProps) {
   const length = queryLength(value);
   const tooLong = length > MAX_QUERY_LENGTH;
@@ -100,6 +119,21 @@ export function Superbar({
         </p>
         <Button type="submit" icon={ArrowUp} disabled={!canSubmit} aria-label="提交检索" className={compact ? "ml-auto" : undefined} />
       </div>
+      {config ? (
+        <div className="mt-2 flex items-center justify-between gap-2 border-t border-line pt-2">
+          <div className="flex min-w-0 items-center gap-1">
+            {onScopeFiltersChange ? (
+              <ScopeFilterMenu scopes={config.scopes} selected={scopeFilters} onChange={onScopeFiltersChange} />
+            ) : null}
+            {onFocusModeChange ? (
+              <FocusModePicker focusModes={config.focusModes} value={focusMode} onChange={onFocusModeChange} />
+            ) : null}
+          </div>
+          {onEngineChange ? (
+            <EnginePicker engines={config.engines} value={engine} onChange={onEngineChange} />
+          ) : null}
+        </div>
+      ) : null}
     </form>
   );
 }
