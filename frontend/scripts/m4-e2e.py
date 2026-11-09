@@ -21,7 +21,7 @@ from pathlib import Path
 
 from playwright.sync_api import Page, expect, sync_playwright
 
-BASE = "http://localhost:3000"
+BASE = os.environ.get("M4_BASE", "http://localhost:3000")
 OUT = Path(__file__).resolve().parent.parent / "docs" / "screenshots" / "M4"
 results: list[tuple[str, bool, str]] = []
 
@@ -36,6 +36,18 @@ QUESTIONS = [
     "Ring Attention 长上下文并行原理",
     "Triton 编写矩阵乘法内核的优化技巧",
     "Transformer 位置编码 RoPE 与 ALiBi 对比",
+]
+
+# M5 稳定性重跑：这批问题从未被检索过，保证前 M4_REAL 次是真实未命中
+FRESH_QUESTIONS = [
+    "NVIDIA Blackwell GPU 架构 SM 单元改进",
+    "FP4 量化推理精度损失分析",
+    "Transformer 稀疏注意力 Sliding Window 实现",
+    "CUDA Graph 优化推理延迟实测",
+    "多模态大模型 ViT 位置编码设计",
+    "vLLM V1 Engine 调度器优化",
+    "Speculative Decoding EAGLE 改进方案",
+    "FlashAttention-3 Ping-Pong 调度原理",
 ]
 
 
@@ -208,7 +220,7 @@ def phase_stability(pw) -> None:
     total = int(os.environ.get("M4_TOTAL", "20"))
     real_target = int(os.environ.get("M4_REAL", "8"))
     s = Session(pw)
-    plan = QUESTIONS[:real_target] + [QUESTIONS[i % real_target] for i in range(total - real_target)]
+    plan = FRESH_QUESTIONS[:real_target] + [FRESH_QUESTIONS[i % real_target] for i in range(total - real_target)]
     ok = hits = misses = fails = 0
     for i, q in enumerate(plan, start=1):
         r = s.search(q)
