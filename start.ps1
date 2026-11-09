@@ -4,6 +4,8 @@
 param([switch]$Rebuild)
 
 $ErrorActionPreference = "Stop"
+$bePort = if ($env:BACKEND_PORT) { $env:BACKEND_PORT } else { "8000" }
+$fePort = if ($env:FRONTEND_PORT) { $env:FRONTEND_PORT } else { "3000" }
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $backend = Join-Path $root "backend"
 $frontend = Join-Path $root "frontend"
@@ -30,16 +32,16 @@ Pop-Location
 Write-Host "[2/3] Installing and building frontend..."
 Push-Location $frontend
 if (-not (Test-Path "node_modules")) { npm ci }
-if ($Rebuild -or -not (Test-Path ".next\BUILD_ID")) { npm run build }
+if ($Rebuild -or -not (Test-Path ".next\BUILD_ID")) { $env:BACKEND_ORIGIN = "http://127.0.0.1:$bePort"; npm run build }
 Pop-Location
 
 Write-Host "[3/3] Starting services..."
-$be = Start-Process -FilePath "uv" -ArgumentList @("run", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000") -WorkingDirectory $backend -PassThru -NoNewWindow
+$be = Start-Process -FilePath "uv" -ArgumentList @("run", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", $bePort) -WorkingDirectory $backend -PassThru -NoNewWindow
 try {
     Start-Sleep -Seconds 3
-    Write-Host "Open http://localhost:3000  (Ctrl+C to stop both services)" -ForegroundColor Green
+    Write-Host "Open http://localhost:$fePort  (Ctrl+C to stop both services)" -ForegroundColor Green
     Push-Location $frontend
-    npm run start
+    npm run start -- -p $fePort
     Pop-Location
 }
 finally {
