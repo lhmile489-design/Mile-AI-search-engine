@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MyGo Spike</title>
+    <style>
+      body { font-family: ui-monospace, Consolas, monospace; margin: 24px; background:#fff; color:#111; }
+      h1 { font-size: 18px; }
+      pre { background:#f4f4f4; padding:12px; border-radius:8px; white-space:pre-wrap; }
+      .row { margin: 8px 0; }
+      button { font: inherit; padding:6px 12px; margin-right:8px; }
+    </style>
+  </head>
+  <body>
+    <h1>MyGo G1 Channel Probes</h1>
+    <div class="row">
+      <button id="burst">Burst 2000</button>
+      <button id="flow">Flow (backpressure)</button>
+      <button id="slow">Slow (cancel test)</button>
+      <button id="slowstop">Stop Slow</button>
+    </div>
+    <pre id="out">ready</pre>
+    <script type="module" src="./src/spike.ts"></script>
+  </body>
+</html>
