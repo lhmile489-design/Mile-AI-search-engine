@@ -11,16 +11,33 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@openuidev/react-lang": "^1.1.0",
+    "katex": "^0.19.1",
+    "lucide-react": "^1.70.0",
     "mygo-runtime": "^0.8.3",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "6.3.0",
+    "@vitest/coverage-v8": "^5.1.0",
+    "autoprefixer": "^10.6.2",
+    "jsdom": "^31.0.0",
     "mygo-cli": "^0.8.3",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^3.4.19",
     "typescript": "^7",
-    "vite": "^8"
+    "vite": "^8",
+    "vitest": "^5.1.0"
   }
 }

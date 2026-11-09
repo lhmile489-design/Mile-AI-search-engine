@@ -8,6 +8,7 @@ import (
 
 	"github.com/egoist/mygo"
 
+	"github.com/lhmile489-design/mile-ai-search/internal/service"
 	"github.com/lhmile489-design/mile-ai-search/spike"
 )
 
@@ -40,6 +41,7 @@ var Tick = mygo.NewEvent[time.Time]("tick")
 
 func main() {
 	mygo.Bind(Greeter{})
+	mygo.Bind(service.SearchService{})
 
 	// G1 spike: bound only when MYGO_SPIKE is set, to keep the shipping window
 	// and generated client free of probe methods. Remove before G2.
@@ -58,11 +60,11 @@ func main() {
 		}
 		win := mygo.NewWindow(mygo.WindowOptions{
 			Title:           "Mile AI Search",
-			Width:           960,
-			Height:          640,
-			MinWidth:        480,
-			MinHeight:       360,
-			BackgroundColor: "light-dark(#f6f7f9, #0f1115)", // the page's --bg in src/style.css
+			Width:           1280,
+			Height:          860,
+			MinWidth:        960,
+			MinHeight:       640,
+			BackgroundColor: "#FBFBFA", // --canvas, avoids a white flash on load
 			// Opens where the user left it last time.
 			StateKey: "main",
 			// The frontend: devUrl during `mygo dev`, frontendDist
