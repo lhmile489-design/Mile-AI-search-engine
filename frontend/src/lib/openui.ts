@@ -62,9 +62,23 @@ const PipelineClockCard = defineComponent({
   component: () => null,
 });
 
-/** 不设 root：两种卡片都能作为根组件解析（签名草案 D1）。 */
+// 后端 generator.py 的 System Prompt 让模型生成 `Table`（签名草案之外的名字），
+// cells 用「列名」作键、Column 只有三个参数。注册同名组件兼容真实下发，
+// 渲染复用同一个 BenchmarkCardView（note 缺省即不显示）。
+const Table = defineComponent({
+  name: "Table",
+  description: "评测数据对比表（后端 prompt 里的卡片名）",
+  props: z.object({
+    title: z.string().describe("表格标题，可带 [n] 引用角标"),
+    columns: z.array(Column.ref).describe("列定义"),
+    rows: z.array(Row.ref).describe("数据行"),
+  }),
+  component: () => null,
+});
+
+/** 不设 root：几种卡片都能作为根组件解析（签名草案 D1 + 后端 Table）。 */
 export const openUILibrary = createLibrary({
-  components: [HardwareBenchmarkCard, Column, Row, PipelineClockCard, Stage],
+  components: [HardwareBenchmarkCard, Column, Row, PipelineClockCard, Stage, Table],
 });
 
 /** ElementNode：parser 产出的组件树节点。 */

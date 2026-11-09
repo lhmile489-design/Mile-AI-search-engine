@@ -32,7 +32,8 @@ function renderNode(
 ): React.ReactNode {
   if (!node) return null;
   const props = unwrapOpenUi(node.props) as Record<string, unknown>;
-  if (node.typeName === "HardwareBenchmarkCard") {
+  // HardwareBenchmarkCard 与后端 prompt 的 Table 都渲染成可排序表格卡片（Table 无 note）。
+  if (node.typeName === "HardwareBenchmarkCard" || node.typeName === "Table") {
     return <BenchmarkCardView {...(props as unknown as BenchmarkCardViewProps)} maxCitation={maxCitation} onCite={onCite} />;
   }
   if (node.typeName === "PipelineClockCard") {

@@ -125,9 +125,25 @@ def phase_result(pw) -> None:
     rel = page.get_by_text("相关追问").count()
     check("F14 相关追问", True, f"{'有' if rel else '后端未下发 related'}")
 
-    # F11 openui 卡片
-    openui = page.get_by_text("交互视图").count()
-    check("F11 OpenUI 卡片", True, f"{'有 ' + str(opui) + ' 张' if (opui := openui) else '后端未下发 openui-lang 围栏'}")
+    # F11 openui 卡片：必须真实出现才算 PASS —— 后端要下发 ```openui-lang 围栏。
+    # 围栏块经 fenceRenderers 渲染成 <figure>（交互卡片或源码降级），不是普通 <pre><code>。
+    # 判别：交互视图按钮、或可排序表格、或降级源码的 figure 块，任一存在即「渲染了」。
+    has_interactive = page.get_by_text("交互视图").count() > 0
+    has_table = page.locator("figure table").count() > 0
+    has_fallback = page.locator("figure pre").count() > 0
+    card_rendered = has_interactive or has_table or has_fallback
+    check(
+        "F11 OpenUI 卡片渲染",
+        card_rendered,
+        f"interactive={has_interactive} table={has_table} fallback={has_fallback}"
+        + ("；后端未下发可解析的 openui-lang 围栏" if not card_rendered else ""),
+    )
+    if has_interactive:
+        # 交互/源码视图切换可用
+        page.get_by_role("button", name="DSL 源码").first.click()
+        page.wait_for_timeout(200)
+        check("F11 可切到 DSL 源码视图", page.locator("figure pre").count() > 0)
+        page.get_by_role("button", name="交互视图").first.click()
 
     # F13 BibTeX：打开任意信源抽屉看 preprint 卡片
     cite = page.get_by_role("button", name="查看第 1 个信源")

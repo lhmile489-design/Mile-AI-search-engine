@@ -155,10 +155,13 @@ def phase_esc(pw) -> None:
     page.wait_for_timeout(6000)
     browser.close()
 
-    # 生成中 Esc：留在 result，保留内容，标「已中止」
+    # 生成中 Esc：留在 result，保留内容，标「已中止」。
+    # 必须用保证不命中缓存的问题，否则后端瞬间回放完成、Esc 来不及中止生成。
+    # 尾巴带时间戳让该问题每次运行都是新问题。
     browser, page, _ = new_page(pw)
     page.goto(BASE)
-    submit(page)
+    fresh_q = f"FlashAttention 内核 warp 专用化与 Ping-Pong 调度差异 {int(time.time()) % 100000}"
+    submit(page, fresh_q)
     article = page.locator("article[aria-label='研报正文']")
     page.wait_for_function(
         "(() => { const a=document.querySelector(\"article[aria-label='研报正文']\"); return a && a.innerText.length>60 })()",

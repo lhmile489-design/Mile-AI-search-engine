@@ -17,6 +17,18 @@ const CLOCK = `root = PipelineClockCard("GEMM 流水线 [3]", "ns", [s1, s2])
 s1 = Stage("TMA 加载", 120, "异步搬运 [3]")
 s2 = Stage("Tensor Core", 340, "WGMMA [3]")`;
 
+// 后端 generator.py System Prompt 让模型生成的真实形态：
+// 组件名是 `Table`（不是签名草案的 HardwareBenchmarkCard），
+// Column 只有三个位置参数（key/label/sortable，无 highlight），
+// cells 用列名（中文）作键。
+const REAL_BACKEND = `root = Table("FA3 与 FA2 吞吐对比 [1]", [c1, c2, c3], [r1, r2, r3])
+c1 = Column("kernel", "内核", false)
+c2 = Column("precision", "精度", false)
+c3 = Column("tflops", "吞吐 (TFLOPS)", true)
+r1 = Row({"kernel": "FA2", "precision": "FP16", "tflops": "350"})
+r2 = Row({"kernel": "FA3 [1]", "precision": "FP16", "tflops": "740 [1]"})
+r3 = Row({"kernel": "FA3", "precision": "FP8", "tflops": "1200 [2]"})`;
+
 const card = (code: string, maxCitation = 9) =>
   renderToStaticMarkup(<OpenUiCard code={code} language="openui-lang" maxCitation={maxCitation} onCite={() => {}} />);
 
@@ -86,5 +98,27 @@ describe("OpenUiCard 渲染", () => {
   it("非法 DSL：降级且不抛错", () => {
     expect(() => card("这不是 DSL")).not.toThrow();
     expect(card("这不是 DSL")).toContain("DSL 源码");
+  });
+
+  it("后端真实围栏：Table + 中文列名 cells 解析并渲染可排序卡片", () => {
+    const r = createParser(openUILibrary.toJSONSchema()).parse(REAL_BACKEND);
+    expect(r.meta.errors).toHaveLength(0);
+    expect(r.root?.typeName).toBe("Table");
+
+    const html = card(REAL_BACKEND);
+    expect(html).toContain("<table");
+    expect(html).toContain("交互视图");
+    expect(html).toContain("DSL 源码");
+    expect(html).toContain("吞吐 (TFLOPS)");
+    expect(html).toContain("1200");
+    // 中文列名 cells 正确落到对应列
+    expect(html).toContain("FA3");
+    expect(html).toContain("FP8");
+  });
+
+  it("后端真实围栏：卡片内 [n] 渲染为角标按钮", () => {
+    const html = card(REAL_BACKEND);
+    expect(html).toContain('aria-label="查看第 1 个信源"');
+    expect(html).toContain('aria-label="查看第 2 个信源"');
   });
 });

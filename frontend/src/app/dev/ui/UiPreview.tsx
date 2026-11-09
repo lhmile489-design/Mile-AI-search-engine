@@ -140,7 +140,20 @@ export function UiPreview() {
       <Section title="OpenUI 交互卡片（F11）">
         <p className="max-w-lead text-sm text-ink-soft">
           openui-lang 围栏块的真实渲染（DSL 见「DSL 源码」页签）。演示用样例数据，不是业务数据。
+          第一张是后端实际下发的 `Table` 语法（generator.py 的 prompt），后两张是签名草案语法。
         </p>
+        <OpenUiCard
+          language="openui-lang"
+          maxCitation={4}
+          onCite={record("卡片内角标点击")}
+          code={`root = Table("FA3 与 FA2 吞吐对比 [1]", [c1, c2, c3], [r1, r2, r3])
+c1 = Column("kernel", "内核", false)
+c2 = Column("precision", "精度", false)
+c3 = Column("tflops", "吞吐 (TFLOPS)", true)
+r1 = Row({"kernel": "FA2", "precision": "FP16", "tflops": "350"})
+r2 = Row({"kernel": "FA3 [1]", "precision": "FP16", "tflops": "740 [1]"})
+r3 = Row({"kernel": "FA3", "precision": "FP8", "tflops": "1200 [2]"})`}
+        />
         <OpenUiCard
           language="openui-lang"
           maxCitation={4}
