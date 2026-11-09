@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Copy, FileText } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 import { splitPassage, type Range } from "@/lib/highlight";
@@ -25,8 +25,38 @@ export type SourceCardViewProps = Readonly<{
 
 export function SourceCardView({ source, ranges, active, activeNonce, categoryLabel }: SourceCardViewProps) {
   const [expanded, setExpanded] = useState(false);
+  const [bibState, setBibState] = useState<"idle" | "copied" | "failed">("idle");
   const date = formatDate(source.publishedAt);
   const passage = source.passage;
+
+  // F13：仅 preprint 给「复制 BibTeX」；bibtex 为 null 时按钮停用并说明。
+  const isPreprint = source.category === "preprint";
+  const bibtex = source.bibtex;
+
+  const copyBibtex = async () => {
+    if (!bibtex) return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(bibtex);
+      } else {
+        // 降级：execCommand 兜底（非 https / 老浏览器无 clipboard API）
+        const ta = document.createElement("textarea");
+        ta.value = bibtex;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        if (!ok) throw new Error("execCommand failed");
+      }
+      setBibState("copied");
+      window.setTimeout(() => setBibState("idle"), 2000);
+    } catch {
+      setBibState("failed");
+      window.setTimeout(() => setBibState("idle"), 2500);
+    }
+  };
 
   // 被角标激活时自动展开，保证高亮的句子可见
   useEffect(() => {
@@ -67,6 +97,33 @@ export function SourceCardView({ source, ranges, active, activeNonce, categoryLa
             <span className="font-mono text-sm text-ink-soft">{source.domain}</span>
             <CategoryTag label={categoryLabel(source.category)} />
             {date ? <span className="font-mono text-sm tabular-nums text-ink-soft">{date}</span> : null}
+            {isPreprint ? (
+              <button
+                type="button"
+                onClick={copyBibtex}
+                disabled={!bibtex}
+                title={bibtex ? "复制 BibTeX 引用" : "该信源未提供 BibTeX"}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-pill px-2 py-0.5 text-label font-semibold",
+                  bibtex
+                    ? "cursor-pointer bg-accent-soft text-accent-soft-ink hover:bg-accent-tint-press"
+                    : "cursor-not-allowed bg-surface-sunk text-ink-faint",
+                )}
+              >
+                {bibState === "copied" ? (
+                  <Check size={13} aria-hidden="true" />
+                ) : bibState === "failed" ? (
+                  <FileText size={13} aria-hidden="true" />
+                ) : (
+                  <Copy size={13} aria-hidden="true" />
+                )}
+                {bibState === "copied" ? "已复制" : bibState === "failed" ? "复制失败" : "复制 BibTeX"}
+                {!bibtex ? "（未提供）" : ""}
+              </button>
+            ) : null}
+            {bibState === "failed" ? (
+              <span role="status" className="text-label text-danger">无法访问剪贴板，请手动复制</span>
+            ) : null}
           </div>
         </div>
       </div>
