@@ -6,10 +6,15 @@ import type { NextConfig } from "next";
 // SSE 经此转发不缓冲，但 Next 内部代理有 30s 空闲超时，后端需每 10s 发 ": ping" 心跳（M0 Q4）。
 const BACKEND_ORIGIN = process.env.BACKEND_ORIGIN ?? "http://127.0.0.1:8000";
 
-const nextConfig: NextConfig = {
-  async rewrites() {
-    return [{ source: "/api/:path*", destination: `${BACKEND_ORIGIN}/api/:path*` }];
-  },
-};
+// STATIC_EXPORT=1：导出纯静态文件到 out/，由后端同源托管（单进程发布），此时不需要 rewrites。
+const staticExport = process.env.STATIC_EXPORT === "1";
+
+const nextConfig: NextConfig = staticExport
+  ? { output: "export" }
+  : {
+      async rewrites() {
+        return [{ source: "/api/:path*", destination: `${BACKEND_ORIGIN}/api/:path*` }];
+      },
+    };
 
 export default nextConfig;

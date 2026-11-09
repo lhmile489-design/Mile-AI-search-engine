@@ -61,3 +61,13 @@ async def health() -> dict:
             },
         },
     }
+
+
+# 单进程发布：若存在前端静态导出目录（frontend/out），由本服务同源托管。必须放在所有 /api 路由之后。
+from pathlib import Path as _Path
+
+_static_dir = _Path(__file__).resolve().parents[2] / "frontend" / "out"
+if _static_dir.is_dir():
+    from fastapi.staticfiles import StaticFiles
+
+    app.mount("/", StaticFiles(directory=_static_dir, html=True), name="web")

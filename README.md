@@ -36,26 +36,23 @@
 ./start.sh
 ```
 
-首次运行会创建 `backend/.env` 并退出，填入两个 Key 后再运行一次。脚本会安装依赖、构建前端、同时启动后端（8000）和前端（3000）。浏览器打开 <http://localhost:3000>。按 Ctrl+C 同时停止两个服务。
+首次运行会创建 `backend/.env` 并退出，填入两个 Key 后再运行一次。脚本会安装依赖、把前端导出为静态文件，再只启动一个服务：后端同时提供接口和页面。浏览器打开 <http://localhost:8000>，按 Ctrl+C 停止。端口冲突时设置环境变量 `PORT`。
 
 强制重新构建前端：`.\start.ps1 -Rebuild` 或 `./start.sh --rebuild`。
 
 ## 手动启动
 
 ```bash
-cd backend
-cp .env.example .env     # 填入 Key
-uv sync
-uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
-
-# 另开一个终端
 cd frontend
 npm ci
-npm run build
-npm run start            # http://localhost:3000
+STATIC_EXPORT=1 npm run build     # 生成 frontend/out
+cd ../backend
+cp .env.example .env              # 填入 Key
+uv sync
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-前端用相对路径 `/api`，由 Next.js 转发到 `http://127.0.0.1:8000`。后端地址不同时，在 `npm run build` 前设置环境变量 `BACKEND_ORIGIN`。
+`frontend/out` 存在时，后端会在同一端口托管页面。开发前端时可单独运行 `npm run dev`（3000），它会把 `/api` 转发到 `http://127.0.0.1:8000`，转发目标用构建时的 `BACKEND_ORIGIN` 修改。
 
 ## 测试
 

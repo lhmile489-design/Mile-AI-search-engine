@@ -1,11 +1,12 @@
 # Mile AI Search one-click launcher (Windows PowerShell)
-# Usage: .\start.ps1            start backend (8000) and frontend (3000)
-#        .\start.ps1 -Rebuild   force rebuild of the frontend
+# Single process: the backend serves the exported frontend on one port.
+# Usage: .\start.ps1             start on port 8000
+#        .\start.ps1 -Rebuild    force rebuild of the frontend
+# Env:   $env:PORT = "8000" to change the port
 param([switch]$Rebuild)
 
 $ErrorActionPreference = "Stop"
-$bePort = if ($env:BACKEND_PORT) { $env:BACKEND_PORT } else { "8000" }
-$fePort = if ($env:FRONTEND_PORT) { $env:FRONTEND_PORT } else { "3000" }
+$port = if ($env:PORT) { $env:PORT } else { "8000" }
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $backend = Join-Path $root "backend"
 $frontend = Join-Path $root "frontend"
@@ -29,21 +30,14 @@ Push-Location $backend
 uv sync
 Pop-Location
 
-Write-Host "[2/3] Installing and building frontend..."
+Write-Host "[2/3] Building frontend (static export)..."
 Push-Location $frontend
 if (-not (Test-Path "node_modules")) { npm ci }
-if ($Rebuild -or -not (Test-Path ".next\BUILD_ID")) { $env:BACKEND_ORIGIN = "http://127.0.0.1:$bePort"; npm run build }
+if ($Rebuild -or -not (Test-Path "out\index.html")) { $env:STATIC_EXPORT = "1"; npm run build }
 Pop-Location
 
-Write-Host "[3/3] Starting services..."
-$be = Start-Process -FilePath "uv" -ArgumentList @("run", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", $bePort) -WorkingDirectory $backend -PassThru -NoNewWindow
-try {
-    Start-Sleep -Seconds 3
-    Write-Host "Open http://localhost:$fePort  (Ctrl+C to stop both services)" -ForegroundColor Green
-    Push-Location $frontend
-    npm run start -- -p $fePort
-    Pop-Location
-}
-finally {
-    if ($be -and -not $be.HasExited) { taskkill /PID $be.Id /T /F | Out-Null }
-}
+Write-Host "[3/3] Starting..."
+Write-Host "Open http://localhost:$port  (Ctrl+C to stop)" -ForegroundColor Green
+Push-Location $backend
+uv run uvicorn app.main:app --host 127.0.0.1 --port $port
+Pop-Location
