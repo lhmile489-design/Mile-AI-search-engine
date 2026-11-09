@@ -20,3 +20,9 @@ Thumbs.db
 
 # 教程原文是第三方文章剪藏，只留在本机作参考，不随仓库公开
 docs/Vibe Coding 实战*.md
+
+# 教程原项目的克隆副本，只在本机作参考，不随仓库公开
+docs/xhl-ai-search-main/
+
+# 前端 session 导出的会话记录
+frontend/pi-session-*.html
