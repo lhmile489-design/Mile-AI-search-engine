@@ -1,0 +1,15 @@
+# 虚拟环境与缓存
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# 密钥与本地数据
+.env
+data/
+*.db
+# 冒烟测试输出
+smoke_output.txt
+
+# IDE
+.idea/

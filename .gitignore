@@ -1,0 +1,25 @@
+# 依赖与构建产物
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# 密钥与本地数据
+.env
+.env.*
+!.env.example
+data/
+*.db
+
+# 日志
+*.log
+
+# IDE 与系统文件
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

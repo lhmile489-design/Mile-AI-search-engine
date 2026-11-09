@@ -1,0 +1,29 @@
+[project]
+name = "mile-search-backend"
+version = "0.1.0"
+description = "Mile AI Search backend (FastAPI)"
+readme = "README.md"
+authors = [
+    { name = "LH米乐", email = "2418878106@qq.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.162.0",
+    "httpx>=0.28.1",
+    "pydantic-settings>=2.16.2",
+    "python-dotenv>=1.2.4",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1.post1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
