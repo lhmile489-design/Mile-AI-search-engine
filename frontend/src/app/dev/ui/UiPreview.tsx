@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, Panel } from "@/components/ui/Card";
 import { Chip, ChipEmphasis } from "@/components/ui/Chip";
 import { Switch } from "@/components/ui/Switch";
+import { OpenUiCard } from "@/components/search/openui/OpenUiCard";
 
 // 预览页只展示组件外观和状态，文案是组件说明，不是业务数据。
 // 点击类组件把「最后一次点击」写进状态行，用来确认事件真的触发了。
@@ -134,6 +135,40 @@ export function UiPreview() {
           <Switch label="停用（关）" checked={false} onCheckedChange={() => undefined} disabled />
           <Switch label="停用（开）" checked onCheckedChange={() => undefined} disabled />
         </Row>
+      </Section>
+
+      <Section title="OpenUI 交互卡片（F11）">
+        <p className="max-w-lead text-sm text-ink-soft">
+          openui-lang 围栏块的真实渲染（DSL 见「DSL 源码」页签）。演示用样例数据，不是业务数据。
+        </p>
+        <OpenUiCard
+          language="openui-lang"
+          maxCitation={4}
+          onCite={record("卡片内角标点击")}
+          code={`root = HardwareBenchmarkCard("FA3 与 FA2 吞吐对比 [1]", [c1, c2, c3], [r1, r2, r3], "H100 SXM5，8K 序列 [2]")
+c1 = Column("kernel", "内核")
+c2 = Column("precision", "精度")
+c3 = Column("tflops", "吞吐 (TFLOPS)", true, true)
+r1 = Row({kernel: "FA2", precision: "FP16", tflops: "350"})
+r2 = Row({kernel: "FA3 [1]", precision: "FP16", tflops: "740 [1]"})
+r3 = Row({kernel: "FA3 [1]", precision: "FP8", tflops: "1200 [2]"})`}
+        />
+        <OpenUiCard
+          language="openui-lang"
+          maxCitation={4}
+          onCite={record("卡片内角标点击")}
+          code={`root = PipelineClockCard("Hopper GEMM tile 流水线 [3]", "ns", [s1, s2, s3])
+s1 = Stage("TMA 异步加载", 120, "从 HBM 搬运到共享内存，与上一 tile 计算重叠 [3]")
+s2 = Stage("Tensor Core 计算", 340, "WGMMA 执行矩阵乘累加 [3]")
+s3 = Stage("SMEM 写回", 60, "累加结果写回全局内存 [4]")`}
+        />
+        <p className="text-sm text-ink-muted">下面是一张解析失败的卡片（降级为 DSL 源码视图）：</p>
+        <OpenUiCard
+          language="openui-lang"
+          maxCitation={4}
+          onCite={record("卡片内角标点击")}
+          code={'root = HardwareBenchmarkCard("缺列定义")'}
+        />
       </Section>
     </main>
   );
