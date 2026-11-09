@@ -24,7 +24,21 @@
 - `LLM_API_KEY`：DeepSeek（OpenAI 兼容接口）
 - `TAVILY_API_KEY`：Tavily 搜索
 
-## 一键启动
+## 桌面应用（Windows）
+
+双击 `MileAISearch.exe` 会打开独立窗口（内嵌 WebView2，Windows 11 自带），后端在同一进程内运行，关闭窗口即退出。不需要安装 Node、uv 或 Python。
+
+首次运行会在 `%APPDATA%\MileAISearch` 创建 `.env` 并用记事本打开，填入 `LLM_API_KEY` 和 `TAVILY_API_KEY`，保存后重新打开程序。检索历史（SQLite）也保存在该目录，升级和删除程序目录不会丢数据。
+
+自行打包：
+
+```powershell
+cd frontend; $env:STATIC_EXPORT="1"; npm ci; npm run build
+cd ..\backend; uv sync; uv run pyinstaller MileAISearch.spec --noconfirm
+# 产物：backend\dist\MileAISearch\（压成 zip 即可分发）
+```
+
+## 一键启动（开发方式，浏览器访问）
 
 ```powershell
 # Windows

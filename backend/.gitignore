@@ -13,3 +13,7 @@ smoke_output.txt
 
 # IDE
 .idea/
+
+# 打包产物
+build/
+dist/
