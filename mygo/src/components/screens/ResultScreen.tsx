@@ -28,6 +28,8 @@ export type ResultScreenProps = Readonly<{
   onCite: (index: number, markerStart: number | null) => void;
   onOpenDrawer: () => void;
   onCloseDrawer: () => void;
+  onFocusSource: (index: number) => void;
+  onClearCitation: () => void;
   categoryLabel: (category: string) => string;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   blockedReason: string | null;
@@ -48,6 +50,8 @@ export function ResultScreen({
   onCite,
   onOpenDrawer,
   onCloseDrawer,
+  onFocusSource,
+  onClearCitation,
   categoryLabel,
   inputRef,
   blockedReason,
@@ -176,6 +180,7 @@ export function ResultScreen({
               maxCitation={sources.length}
               activeCitation={state.activeCitation}
               onCite={onCite}
+              onClear={onClearCitation}
             />
             <div className="mt-6">
               <RelatedQuestions items={state.related} onSelect={(q) => onSubmit(q)} />
@@ -189,6 +194,7 @@ export function ResultScreen({
               open={state.drawerOpen}
               desktop={desktop}
               onClose={onCloseDrawer}
+              onFocusSource={onFocusSource}
               categoryLabel={categoryLabel}
             />
           </div>

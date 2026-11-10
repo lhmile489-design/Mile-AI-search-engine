@@ -385,6 +385,35 @@ describe("证据抽屉与 Esc 决策", () => {
     expect(b.activeCitation).toEqual({ index: 2, markerStart: 7, nonce: 2 });
   });
 
+  it("F06 点信源卡片：markerStart 为 null，nonce 递增；再点同一张取消；换一张则切换", () => {
+    const g = generating();
+    const a = searchReducer(g, { type: "FOCUS_SOURCE", index: 2 });
+    expect(a.activeCitation).toEqual({ index: 2, markerStart: null, nonce: 1 });
+    const b = searchReducer(a, { type: "FOCUS_SOURCE", index: 3 });
+    expect(b.activeCitation).toEqual({ index: 3, markerStart: null, nonce: 2 });
+    const c = searchReducer(b, { type: "FOCUS_SOURCE", index: 3 });
+    expect(c.activeCitation).toBeNull();
+  });
+
+  it("F06 从精确角标切到同编号卡片：不当作取消，而是变为该编号全部高亮", () => {
+    const g = generating();
+    const a = searchReducer(g, { type: "OPEN_CITATION", index: 2, markerStart: 7 });
+    const b = searchReducer(a, { type: "FOCUS_SOURCE", index: 2 });
+    expect(b.activeCitation).toMatchObject({ index: 2, markerStart: null });
+  });
+
+  it("F06 CLEAR_CITATION 取消高亮；本来没有高亮时状态引用不变", () => {
+    const g = generating();
+    const a = searchReducer(g, { type: "FOCUS_SOURCE", index: 1 });
+    expect(searchReducer(a, { type: "CLEAR_CITATION" }).activeCitation).toBeNull();
+    const none = searchReducer(g, { type: "CLEAR_CITATION" });
+    expect(searchReducer(none, { type: "CLEAR_CITATION" })).toBe(none);
+  });
+
+  it("F06 非 result 阶段忽略 FOCUS_SOURCE", () => {
+    expect(searchReducer(initialState, { type: "FOCUS_SOURCE", index: 1 })).toBe(initialState);
+  });
+
   it("escapeAction 三种行为", () => {
     const submitted = searchReducer(initialState, { type: "SUBMIT", query: "q" });
     expect(escapeAction(initialState)).toBe("none");

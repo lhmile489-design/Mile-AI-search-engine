@@ -104,6 +104,22 @@ describe("MarkdownRenderer 整体渲染", () => {
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
     expect(html.match(/aria-pressed="false"/g)).toHaveLength(1);
   });
+
+  it("F06：markerStart 为 null 时，编号匹配的角标全部高亮，其他编号不高亮", () => {
+    const html = renderToStaticMarkup(
+      <MarkdownRenderer
+        text="甲 [1] 乙 [2] 丙 [1]。"
+        maxCitation={2}
+        activeCitation={{ index: 1, markerStart: null }}
+        onCite={() => {}}
+      />,
+    );
+    const pressed = (n: number, v: string) =>
+      (html.match(new RegExp(`aria-label="查看第 ${n} 个信源"[^>]*aria-pressed="${v}"`, "g")) ?? []).length;
+    expect(pressed(1, "true")).toBe(2);
+    expect(pressed(2, "false")).toBe(1);
+    expect(pressed(2, "true")).toBe(0);
+  });
 });
 
 describe("highlight：UTF-16 偏移与 slice", () => {

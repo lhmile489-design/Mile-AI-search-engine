@@ -27,9 +27,11 @@ export type ReportViewProps = Readonly<{
   maxCitation: number;
   activeCitation: ActiveMarker | null;
   onCite: (index: number, markerStart: number | null) => void;
+  /** 点正文空白处取消高亮 */
+  onClear?: () => void;
 }>;
 
-export function ReportView({ report, generating, aborted, maxCitation, activeCitation, onCite }: ReportViewProps) {
+export function ReportView({ report, generating, aborted, maxCitation, activeCitation, onCite, onClear }: ReportViewProps) {
   // 低优先级渲染：流式追加时输入框、按钮等交互不被整篇重渲染拖慢
   const text = useDeferredValue(report);
 
@@ -44,7 +46,13 @@ export function ReportView({ report, generating, aborted, maxCitation, activeCit
     [maxCitation, onCite],
   );
   return (
-    <article aria-label="研报正文" aria-busy={generating} className="rounded-card bg-surface px-6 py-7 shadow-e2">
+    <article
+      aria-label="研报正文"
+      aria-busy={generating}
+      onClick={(e) => {
+        if (!(e.target as HTMLElement).closest("button,a")) onClear?.();
+      }}
+      className="rounded-card bg-surface px-6 py-7 shadow-e2">
       {aborted ? (
         <p
           role="status"

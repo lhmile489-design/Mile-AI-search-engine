@@ -20,9 +20,11 @@ export type SourceCardViewProps = Readonly<{
   /** 每次点击角标 +1，用来在同一张卡片上重复触发展开 */
   activeNonce: number;
   categoryLabel: (category: string) => string;
+  /** F06：点卡片，高亮正文里指向它的角标 */
+  onFocus: (index: number) => void;
 }>;
 
-export function SourceCardView({ source, ranges, active, activeNonce, categoryLabel }: SourceCardViewProps) {
+export function SourceCardView({ source, ranges, active, activeNonce, categoryLabel, onFocus }: SourceCardViewProps) {
   const [expanded, setExpanded] = useState(false);
   const [bibState, setBibState] = useState<"idle" | "copied" | "failed">("idle");
   const date = formatDate(source.publishedAt);
@@ -73,15 +75,26 @@ export function SourceCardView({ source, ranges, active, activeNonce, categoryLa
     <li
       id={source.index !== null ? `source-${source.index}` : undefined}
       aria-current={active ? "true" : undefined}
+      onClick={(e) => {
+        if (source.index === null || (e.target as HTMLElement).closest("a,button")) return;
+        onFocus(source.index);
+      }}
       className={cn(
         "border-t border-line px-6 py-5 first:border-t-0",
         active ? "source-active bg-accent-soft" : "bg-surface",
       )}
     >
       <div className="flex items-start gap-3">
-        <span className="mt-0.5 inline-flex min-w-6 shrink-0 justify-center rounded-xs bg-accent-soft px-1 text-xs font-bold leading-6 text-accent-soft-ink">
+        <button
+          type="button"
+          aria-label={`高亮正文中引用第 ${source.index} 个信源的角标`}
+          aria-pressed={active}
+          disabled={source.index === null}
+          onClick={() => source.index !== null && onFocus(source.index)}
+          className="mt-0.5 inline-flex min-w-6 shrink-0 cursor-pointer justify-center rounded-xs bg-accent-soft px-1 text-xs font-bold leading-6 text-accent-soft-ink hover:bg-accent-tint-press"
+        >
           {source.index}
-        </span>
+        </button>
         <div className="min-w-0 flex-1">
           <a
             href={source.url}

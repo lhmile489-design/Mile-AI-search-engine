@@ -241,6 +241,17 @@ export function searchReducer(state: SearchState, action: SearchAction): SearchS
         },
       };
 
+    case "FOCUS_SOURCE": {
+      if (state.phase !== "result") return state;
+      const cur = state.activeCitation;
+      // 再点同一张卡片：取消。markerStart 为 null 表示「该编号的所有角标」
+      if (cur && cur.index === action.index && cur.markerStart === null) return { ...state, activeCitation: null };
+      return { ...state, activeCitation: { index: action.index, markerStart: null, nonce: (cur?.nonce ?? 0) + 1 } };
+    }
+
+    case "CLEAR_CITATION":
+      return state.activeCitation ? { ...state, activeCitation: null } : state;
+
     case "OPEN_DRAWER":
       return state.phase === "result" ? { ...state, drawerOpen: true } : state;
 

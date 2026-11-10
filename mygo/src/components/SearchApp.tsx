@@ -85,6 +85,8 @@ export function SearchApp() {
     (index: number, markerStart: number | null) => dispatch({ type: "OPEN_CITATION", index, markerStart }),
     [dispatch],
   );
+  const handleFocusSource = useCallback((index: number) => dispatch({ type: "FOCUS_SOURCE", index }), [dispatch]);
+  const handleClearCitation = useCallback(() => dispatch({ type: "CLEAR_CITATION" }), [dispatch]);
   const handleOpenDrawer = useCallback(() => dispatch({ type: "OPEN_DRAWER" }), [dispatch]);
   const handleCloseDrawer = useCallback(() => dispatch({ type: "CLOSE_DRAWER" }), [dispatch]);
 
@@ -145,6 +147,8 @@ export function SearchApp() {
               onCite={handleCite}
               onOpenDrawer={handleOpenDrawer}
               onCloseDrawer={handleCloseDrawer}
+              onFocusSource={handleFocusSource}
+              onClearCitation={handleClearCitation}
               categoryLabel={boot.categoryLabel}
               inputRef={inputRef}
               blockedReason={blockedReason}

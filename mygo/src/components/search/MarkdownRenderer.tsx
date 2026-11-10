@@ -50,8 +50,9 @@ const CitationContext = createContext<CitationContextValue>({ active: null, onCi
 
 function CitationBadge({ index, markerStart }: Readonly<{ index: number; markerStart: number | null }>) {
   const { active, onCite } = useContext(CitationContext);
-  // 精确对应：编号和偏移都一致才是「被点击的那一个」，同一信源的其他角标不跟着亮
-  const isActive = active !== null && active.index === index && active.markerStart === markerStart;
+  // 点角标：编号和偏移都一致才是「被点击的那一个」，同一信源的其他角标不跟着亮。
+  // 点信源卡片（F06）：markerStart 为 null，该编号的所有角标一起亮
+  const isActive = active !== null && active.index === index && (active.markerStart === null || active.markerStart === markerStart);
   return (
     <button
       type="button"

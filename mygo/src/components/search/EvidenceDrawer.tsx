@@ -20,6 +20,7 @@ export type EvidenceDrawerProps = Readonly<{
   open: boolean;
   desktop: boolean;
   onClose: () => void;
+  onFocusSource: (index: number) => void;
   categoryLabel: (category: string) => string;
 }>;
 
@@ -36,6 +37,7 @@ export function EvidenceDrawer({
   open,
   desktop,
   onClose,
+  onFocusSource,
   categoryLabel,
 }: EvidenceDrawerProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -111,6 +113,7 @@ export function EvidenceDrawer({
                   active={activeCitation?.index === source.index}
                   activeNonce={activeCitation?.nonce ?? 0}
                   categoryLabel={categoryLabel}
+                  onFocus={onFocusSource}
                 />
               ))}
             </ul>

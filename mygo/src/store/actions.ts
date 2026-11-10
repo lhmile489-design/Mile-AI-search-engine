@@ -15,6 +15,9 @@ export type SearchAction =
   | Readonly<{ type: "NEW_SEARCH" }>
   | Readonly<{ type: "RESTORE"; detail: HistoryDetail }>
   | Readonly<{ type: "OPEN_CITATION"; index: number; markerStart: number | null }>
+  /** F06 反向定位：点信源卡片，正文里指向它的角标全部高亮；再点同一张卡片取消 */
+  | Readonly<{ type: "FOCUS_SOURCE"; index: number }>
+  | Readonly<{ type: "CLEAR_CITATION" }>
   | Readonly<{ type: "OPEN_DRAWER" }>
   | Readonly<{ type: "CLOSE_DRAWER" }>
   /** 非流式错误（配置拉取失败、历史恢复失败等）的提示条 */
