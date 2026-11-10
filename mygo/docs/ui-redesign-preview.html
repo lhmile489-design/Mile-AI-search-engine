@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mile AI Search — UI/UX Redesign Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ===== DESIGN TOKENS ===== */
+:root {
+  --bg: #F5F5F5;
+  --surface: #FFFFFF;
+  --surface-sunk: #EDEDED;
+  --layer-line: #E0E0E0;
+  --line-input: #D2D2D2;
+  --track-off: #D5D5D5;
+  --disabled-bg: #E5E5E5;
+  --ink: #17181C;
+  --ink-soft: #4A4D57;
+  --ink-muted: #6B7280;
+  --ink-faint: #9A9DA6;
+  --on-accent: #FFFFFF;
+  --accent: #FA7B29;
+  --accent-deep: #D96110;
+  --accent-soft: #FFF3EB;
+  --accent-soft-ink: #B4480A;
+  --accent-tint-hover: rgba(250, 123, 41, .08);
+  --accent-tint-press: rgba(250, 123, 41, .16);
+  --accent-glow: rgba(250, 123, 41, .2);
+  --accent-row-tint: rgba(250, 123, 41, .04);
+  --success: #15803D; --success-soft: #F0FDF4;
+  --warning: #B45309; --warning-soft: #FFFBEB;
+  --danger: #B91C1C; --danger-soft: #FEF2F2;
+  --highlight-bg: #FEF3C7;
+  --highlight-ink: #92400E;
+  --glass-header: rgba(255,255,255,.88);
+  --glass-float: rgba(255,255,255,.65);
+  --glass-edge: rgba(255,255,255,.8);
+  --blur-amount: 10px;
+  --dot-color: rgba(23,24,28,.055);
+  --dot-gap: 24px;
+  --elevation-1: 0 1px 3px rgba(0,0,0,.1);
+  --elevation-2: 0 4px 6px rgba(0,0,0,.1);
+  --elevation-3: 0 10px 20px rgba(0,0,0,.1);
+  --elevation-4: 0 20px 40px rgba(0,0,0,.15);
+  --shadow-accent-rest: 0 6px 16px rgba(250,123,41,.35);
+  --shadow-accent-hover: 0 12px 26px rgba(250,123,41,.4);
+  --ring-focus-soft: 0 0 0 3px rgba(250,123,41,.25);
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius: 14px;
+  --radius-pill: 999px;
+  --font-display: 'Space Grotesk', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-body: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+  --text-xs: 12px; --text-sm: 13px; --text-label: 14px;
+  --text-ui: 15px; --text-base: 16px; --text-lg: 18px;
+  --text-xl: 25px; --text-2xl: clamp(24px,3.5vw,31px);
+  --text-display: clamp(28px,4.2vw,42px);
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-7: 28px; --space-8: 32px;
+  --space-12: 48px; --space-16: 64px;
+  --w-sidebar: 248px;
+  --w-sidebar-compact: 56px;
+  --duration-fast: 200ms; --duration-base: 250ms;
+  --ease: ease;
+}
+
+/* ===== ACCENT THEME PALETTES ===== */
+/* 默认橙色与 appLogo 品牌色一致 (#FA7B29)；JS 的 THEMES 表是唯一来源 */
+html[data-accent="blue"] {
+  --accent: #2563EB; --accent-deep: #1D4ED8;
+  --accent-soft: #EFF6FF; --accent-soft-ink: #1E40AF;
+  --accent-tint-hover: rgba(37,99,235,.08); --accent-tint-press: rgba(37,99,235,.16);
+  --accent-glow: rgba(37,99,235,.2); --accent-row-tint: rgba(37,99,235,.04);
+  --shadow-accent-rest: 0 6px 16px rgba(37,99,235,.35);
+  --shadow-accent-hover: 0 12px 26px rgba(37,99,235,.4);
+  --ring-focus-soft: 0 0 0 3px rgba(37,99,235,.25);
+}
+html[data-accent="emerald"] {
+  --accent: #059669; --accent-deep: #047857;
+  --accent-soft: #ECFDF5; --accent-soft-ink: #065F46;
+  --accent-tint-hover: rgba(5,150,105,.08); --accent-tint-press: rgba(5,150,105,.16);
+  --accent-glow: rgba(5,150,105,.2); --accent-row-tint: rgba(5,150,105,.04);
+  --shadow-accent-rest: 0 6px 16px rgba(5,150,105,.35);
+  --shadow-accent-hover: 0 12px 26px rgba(5,150,105,.4);
+  --ring-focus-soft: 0 0 0 3px rgba(5,150,105,.25);
+}
+html[data-accent="violet"] {
+  --accent: #7C3AED; --accent-deep: #6D28D9;
+  --accent-soft: #F5F3FF; --accent-soft-ink: #5B21B6;
+  --accent-tint-hover: rgba(124,58,237,.08); --accent-tint-press: rgba(124,58,237,.16);
+  --accent-glow: rgba(124,58,237,.2); --accent-row-tint: rgba(124,58,237,.04);
+  --shadow-accent-rest: 0 6px 16px rgba(124,58,237,.35);
+  --shadow-accent-hover: 0 12px 26px rgba(124,58,237,.4);
+  --ring-focus-soft: 0 0 0 3px rgba(124,58,237,.25);
+}
+html[data-accent="rose"] {
+  --accent: #E11D48; --accent-deep: #BE123C;
+  --accent-soft: #FFF1F2; --accent-soft-ink: #9F1239;
+  --accent-tint-hover: rgba(225,29,72,.08); --accent-tint-press: rgba(225,29,72,.16);
+  --accent-glow: rgba(225,29,72,.2); --accent-row-tint: rgba(225,29,72,.04);
+  --shadow-accent-rest: 0 6px 16px rgba(225,29,72,.35);
+  --shadow-accent-hover: 0 12px 26px rgba(225,29,72,.4);
+  --ring-focus-soft: 0 0 0 3px rgba(225,29,72,.25);
+}
+html[data-accent="slate"] {
+  --accent: #475569; --accent-deep: #334155;
+  --accent-soft: #F1F5F9; --accent-soft-ink: #1E293B;
+  --accent-tint-hover: rgba(71,85,105,.08); --accent-tint-press: rgba(71,85,105,.16);
+  --accent-glow: rgba(71,85,105,.2); --accent-row-tint: rgba(71,85,105,.04);
+  --shadow-accent-rest: 0 6px 16px rgba(71,85,105,.35);
+  --shadow-accent-hover: 0 12px 26px rgba(71,85,105,.4);
+  --ring-focus-soft: 0 0 0 3px rgba(71,85,105,.25);
+}
+
+/* ===== THEME PICKER (round trigger + dropdown) ===== */
+.theme-picker { position: relative; margin-right: var(--space-2); }
+.theme-trigger {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--layer-line);
+  box-shadow: var(--elevation-1);
+  transition: transform var(--duration-fast) var(--ease),
+              box-shadow var(--duration-fast) var(--ease);
+}
+.theme-trigger:hover { transform: translateY(-1px); box-shadow: var(--elevation-3); }
+.theme-trigger-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.35);
+}
+.theme-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 80;
+  width: 188px; padding: var(--space-3);
+  background: var(--surface); border: 1px solid var(--layer-line);
+  border-radius: var(--radius); box-shadow: var(--elevation-4);
+  display: none; flex-direction: column; gap: 2px;
+}
+.theme-dropdown.open { display: flex; animation: theme-drop-in var(--duration-fast) var(--ease); }
+@keyframes theme-drop-in {
+  from { opacity: 0; transform: translateY(-4px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.theme-dropdown-label {
+  font-size: var(--text-xs); font-weight: 700; color: var(--ink-faint);
+  text-transform: uppercase; letter-spacing: .08em;
+  padding: 0 var(--space-2) var(--space-2);
+}
+.theme-option {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2); border-radius: var(--radius-md);
+  font-size: var(--text-sm); font-weight: 500; color: var(--ink-soft);
+  transition: background var(--duration-fast) var(--ease);
+  width: 100%; text-align: left;
+}
+.theme-option:hover { background: var(--accent-tint-hover); color: var(--ink); }
+.theme-option-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--swatch); flex-shrink: 0;
+}
+.theme-option-name { flex: 1; }
+.theme-option-check {
+  width: 14px; height: 14px; color: var(--accent);
+  display: none; align-items: center; justify-content: center;
+}
+.theme-option.active .theme-option-check { display: inline-flex; }
+.theme-option-sep { height: 1px; background: var(--layer-line); margin: var(--space-2) 0; }
+.theme-option-dot.rainbow {
+  background: conic-gradient(#FA7B29,#E11D48,#7C3AED,#2563EB,#059669,#FA7B29);
+}
+.theme-color-input {
+  position: absolute; width: 1px; height: 1px;
+  opacity: 0; pointer-events: none;
+}
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+  background-size: var(--dot-gap) var(--dot-gap);
+  color: var(--ink);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+input, textarea { font-family: inherit; }
+a { color: var(--accent-deep); text-decoration: none; }
+
+/* ===== LAYOUT SHELL ===== */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ===== TOP BAR ===== */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 52px;
+  background: var(--glass-header);
+  backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  box-shadow: var(--elevation-1);
+  z-index: 60;
+  display: flex; align-items: center;
+  padding: 0 var(--space-4);
+  gap: var(--space-3);
+  border-bottom: 1px solid rgba(224,224,224,.6);
+}
+.topbar-brand {
+  display: flex; align-items: center; gap: var(--space-3);
+  text-decoration: none; color: var(--ink);
+}
+.topbar-brand-icon {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.topbar-brand-icon img { width: 100%; height: 100%; object-fit: contain; }
+.topbar-brand-name {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: var(--text-lg); color: var(--ink);
+  letter-spacing: -.02em;
+}
+.topbar-sep {
+  width: 1px; height: 20px; background: var(--layer-line); flex-shrink: 0;
+}
+.topbar-breadcrumb {
+  font-size: var(--text-sm); color: var(--ink-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 360px;
+}
+.topbar-actions {
+  margin-left: auto; display: flex; align-items: center; gap: var(--space-2);
+}
+.topbar-icon-btn {
+  width: 34px; height: 34px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); color: var(--ink-soft);
+  transition: background var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease);
+}
+.topbar-icon-btn:hover { background: var(--accent-tint-hover); color: var(--ink); }
+.topbar-btn-secondary {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-3); height: 32px;
+  background: var(--surface); border: 1px solid var(--layer-line);
+  border-radius: var(--radius-md); font-size: var(--text-sm); font-weight: 600;
+  color: var(--ink-soft); box-shadow: var(--elevation-1);
+  transition: transform var(--duration-fast) var(--ease),
+              box-shadow var(--duration-fast) var(--ease);
+  white-space: nowrap;
+}
+.topbar-btn-secondary:hover { transform: translateY(-1px); box-shadow: var(--elevation-3); color: var(--ink); }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  position: fixed; top: 52px; left: 0; bottom: 0;
+  width: var(--w-sidebar);
+  background: var(--surface);
+  box-shadow: var(--elevation-1);
+  z-index: 50;
+  display: flex; flex-direction: column;
+  transition: width var(--duration-base) var(--ease),
+              transform var(--duration-base) var(--ease);
+  border-right: 1px solid var(--layer-line);
+}
+.sidebar.compact { width: var(--w-sidebar-compact); }
+.sidebar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--layer-line);
+  min-height: 52px;
+}
+.sidebar-title {
+  font-family: var(--font-display); font-size: var(--text-label);
+  font-weight: 700; color: var(--ink); letter-spacing: .02em;
+  text-transform: uppercase;
+  overflow: hidden; white-space: nowrap;
+}
+.sidebar.compact .sidebar-title { display: none; }
+.sidebar-toggle {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); color: var(--ink-soft);
+  transition: background var(--duration-fast) var(--ease);
+}
+.sidebar-toggle:hover { background: var(--accent-tint-hover); }
+.sidebar-section-label {
+  font-size: var(--text-xs); font-weight: 700; color: var(--ink-faint);
+  text-transform: uppercase; letter-spacing: .08em;
+  padding: var(--space-4) var(--space-4) var(--space-2);
+  overflow: hidden; white-space: nowrap;
+}
+.sidebar.compact .sidebar-section-label { display: none; }
+.sidebar-item {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-radius: 0;
+  color: var(--ink-soft); font-size: var(--text-ui);
+  text-align: left; width: 100%;
+  transition: background var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.sidebar-item:hover { background: var(--accent-tint-hover); color: var(--ink); }
+.sidebar-item.active {
+  background: var(--accent-soft); color: var(--accent-deep); font-weight: 600;
+}
+.sidebar-item-icon {
+  width: 20px; height: 20px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.sidebar-item-text {
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sidebar.compact .sidebar-item-text { display: none; }
+.sidebar-item-meta {
+  font-size: var(--text-xs); color: var(--ink-faint);
+  white-space: nowrap;
+}
+.sidebar.compact .sidebar-item-meta { display: none; }
+.sidebar-item-badge {
+  display: inline-flex; align-items: center;
+  padding: 1px 7px; border-radius: var(--radius-pill);
+  background: var(--accent-soft); color: var(--accent-soft-ink);
+  font-size: var(--text-xs); font-weight: 700;
+  flex-shrink: 0;
+}
+.sidebar.compact .sidebar-item-badge { display: none; }
+.sidebar-body { flex: 1; overflow-y: auto; overflow-x: hidden; }
+.sidebar-footer {
+  border-top: 1px solid var(--layer-line);
+  padding: var(--space-3) var(--space-4);
+  display: flex; align-items: center; gap: var(--space-3);
+}
+.sidebar.compact .sidebar-footer { justify-content: center; padding: var(--space-3); }
+.sidebar-footer-text {
+  font-size: var(--text-xs); color: var(--ink-faint); overflow: hidden;
+}
+.sidebar.compact .sidebar-footer-text { display: none; }
+.sidebar-kbd {
+  display: inline-flex; align-items: center;
+  background: var(--surface-sunk); border-radius: var(--radius-xs);
+  padding: 1px 6px; font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--ink-muted); box-shadow: var(--elevation-1);
+  white-space: nowrap;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content {
+  margin-top: 52px;
+  margin-left: var(--w-sidebar);
+  flex: 1;
+  transition: margin-left var(--duration-base) var(--ease);
+  min-height: calc(100vh - 52px);
+  display: flex; flex-direction: column;
+}
+.main-content.compact-sidebar { margin-left: var(--w-sidebar-compact); }
+
+/* ===== TAB STRIP (Secondary nav beneath topbar) ===== */
+.tab-strip {
+  background: var(--surface);
+  border-bottom: 1px solid var(--layer-line);
+  box-shadow: var(--elevation-1);
+  display: flex; align-items: center;
+  padding: 0 var(--space-6);
+  gap: var(--space-1);
+  height: 42px;
+  position: sticky; top: 52px; z-index: 50;
+}
+.tab-item {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: 0 var(--space-4); height: 34px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm); font-weight: 600; color: var(--ink-muted);
+  transition: background var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease);
+  white-space: nowrap; position: relative;
+}
+.tab-item:hover { background: var(--accent-tint-hover); color: var(--ink); }
+.tab-item.active {
+  background: var(--accent-soft); color: var(--accent-deep);
+}
+.tab-strip-sep { flex: 1; }
+.tab-badge {
+  display: inline-flex; align-items: center; padding: 1px 6px;
+  border-radius: var(--radius-pill); background: var(--accent-soft);
+  color: var(--accent-soft-ink); font-size: 11px; font-weight: 700;
+}
+
+/* ===== CONTENT AREA ===== */
+.content-area {
+  flex: 1;
+  padding: var(--space-6);
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* ===== CONVERSATION PANEL ===== */
+.conv-panel {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--elevation-2);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  min-height: 600px;
+}
+.conv-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--layer-line);
+  background: var(--surface);
+}
+.conv-panel-title {
+  font-family: var(--font-display); font-size: var(--text-label);
+  font-weight: 700; color: var(--ink); letter-spacing: .03em;
+  text-transform: uppercase; display: flex; align-items: center; gap: var(--space-2);
+}
+.conv-panel-title-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-soft);
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 3px var(--success-soft); }
+  50% { box-shadow: 0 0 0 5px rgba(21,128,61,.12); }
+}
+.conv-panel-actions {
+  display: flex; align-items: center; gap: var(--space-2);
+}
+.conv-messages {
+  flex: 1; overflow-y: auto;
+  padding: var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-5);
+}
+/* User message */
+.msg-user {
+  display: flex; justify-content: flex-end;
+}
+.msg-user-bubble {
+  max-width: 80%;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: var(--radius) var(--radius) var(--radius-xs) var(--radius);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-ui);
+  box-shadow: var(--shadow-accent-rest);
+  line-height: 1.5;
+}
+/* AI message */
+.msg-ai {
+  display: flex; gap: var(--space-3); align-items: flex-start;
+}
+.msg-ai-avatar {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 2px;
+}
+.msg-ai-avatar img { width: 100%; height: 100%; object-fit: contain; }
+.msg-ai-content { flex: 1; min-width: 0; }
+.msg-ai-meta {
+  display: flex; align-items: center; gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.msg-ai-name {
+  font-size: var(--text-sm); font-weight: 700; color: var(--ink);
+  font-family: var(--font-display);
+}
+.msg-ai-time { font-size: var(--text-xs); color: var(--ink-faint); }
+.msg-ai-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: var(--radius-pill);
+  background: var(--success-soft); color: var(--success);
+  font-size: var(--text-xs); font-weight: 700;
+}
+.msg-ai-bubble {
+  background: var(--surface);
+  border: 1px solid var(--layer-line);
+  border-radius: var(--radius-xs) var(--radius) var(--radius) var(--radius);
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--text-ui); color: var(--ink-soft);
+  line-height: 1.65; box-shadow: var(--elevation-1);
+}
+.msg-ai-bubble p + p { margin-top: var(--space-3); }
+/* Citation badge */
+.cite-badge {
+  display: inline-flex; align-items: center;
+  padding: 1px 5px; border-radius: var(--radius-xs);
+  background: var(--accent-soft); color: var(--accent-soft-ink);
+  font-size: var(--text-xs); font-weight: 700; font-family: var(--font-mono);
+  vertical-align: super; cursor: pointer; margin: 0 1px;
+  transition: background var(--duration-fast);
+}
+.cite-badge:hover { background: var(--accent); color: var(--on-accent); }
+/* Evidence row inside message */
+.evidence-row {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-sunk);
+  border-radius: var(--radius-md);
+  display: flex; align-items: flex-start; gap: var(--space-3);
+}
+.evidence-row-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent);
+  font-size: var(--text-xs); font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.evidence-row-body { flex: 1; min-width: 0; }
+.evidence-row-title { font-size: var(--text-sm); font-weight: 600; color: var(--ink); }
+.evidence-row-url { font-size: var(--text-xs); color: var(--ink-faint); font-family: var(--font-mono); margin-top: 1px; }
+/* Thinking/steps block */
+.steps-block {
+  margin-top: var(--space-3);
+  background: var(--surface-sunk);
+  border-radius: var(--radius-md); overflow: hidden;
+}
+.steps-block-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer; user-select: none;
+}
+.steps-block-header:hover { background: rgba(0,0,0,.02); }
+.steps-block-title {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft);
+}
+.steps-block-toggle { font-size: var(--text-xs); color: var(--ink-faint); }
+.steps-list {
+  padding: 0 var(--space-4) var(--space-3);
+  display: flex; flex-direction: column; gap: var(--space-2);
+}
+.step-row {
+  display: flex; align-items: center; gap: var(--space-3);
+  font-size: var(--text-sm); color: var(--ink-soft);
+}
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.step-dot.done { background: var(--success); }
+.step-dot.active { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.step-dot.pending { background: var(--track-off); }
+.step-time {
+  margin-left: auto; font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--ink-faint); font-variant-numeric: tabular-nums;
+}
+
+/* ===== INPUT BAR ===== */
+.input-bar {
+  border-top: 1px solid var(--layer-line);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+}
+.input-row {
+  display: flex; align-items: flex-end; gap: var(--space-3);
+  background: var(--surface-sunk);
+  border: 1px solid var(--line-input);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.05);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+.input-row:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--ring-focus-soft);
+}
+.input-textarea {
+  flex: 1; resize: none; border: none; outline: none; background: transparent;
+  font-size: var(--text-ui); color: var(--ink); line-height: 1.5;
+  min-height: 40px; max-height: 120px;
+  font-family: var(--font-body);
+}
+.input-textarea::placeholder { color: var(--ink-faint); }
+.input-actions {
+  display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0;
+}
+.input-send-btn {
+  width: 34px; height: 34px;
+  background: var(--accent); color: var(--on-accent);
+  border-radius: var(--radius-md);
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-accent-rest);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+}
+.input-send-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-accent-hover); }
+.input-send-btn:active { transform: translateY(0); box-shadow: none; }
+.input-icon-btn {
+  width: 34px; height: 34px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-md); color: var(--ink-soft);
+  transition: background var(--duration-fast);
+}
+.input-icon-btn:hover { background: var(--accent-tint-hover); }
+.input-bar-meta {
+  display: flex; align-items: center; gap: var(--space-3);
+  margin-top: var(--space-2); padding: 0 var(--space-1);
+}
+.input-mode-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: var(--radius-pill);
+  background: var(--surface); border: 1px solid var(--layer-line);
+  font-size: var(--text-xs); font-weight: 600; color: var(--ink-soft);
+  box-shadow: var(--elevation-1); cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.input-mode-chip:hover { background: var(--accent-tint-hover); color: var(--ink); }
+.input-mode-chip.active { background: var(--accent-soft); color: var(--accent-soft-ink); border-color: transparent; }
+.input-bar-hint { font-size: var(--text-xs); color: var(--ink-faint); margin-left: auto; }
+
+/* ===== PREVIEW PANEL ===== */
+.preview-panel {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--elevation-2);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  position: sticky; top: calc(52px + 42px + var(--space-6));
+  max-height: calc(100vh - 52px - 42px - var(--space-12));
+}
+.preview-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--layer-line);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.preview-panel-title {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-display); font-size: var(--text-label);
+  font-weight: 700; color: var(--ink);
+}
+.preview-tab-group {
+  display: flex; gap: 2px;
+  background: var(--surface-sunk); border-radius: var(--radius-md); padding: 2px;
+}
+.preview-tab {
+  padding: 4px 12px; border-radius: var(--radius-sm);
+  font-size: var(--text-xs); font-weight: 600; color: var(--ink-muted);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.preview-tab:hover { color: var(--ink); }
+.preview-tab.active {
+  background: var(--surface); color: var(--ink);
+  box-shadow: var(--elevation-1);
+}
+.preview-body { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+/* Source list */
+.source-list { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+.source-card {
+  background: var(--surface);
+  border: 1px solid var(--layer-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--elevation-1);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+  cursor: pointer; position: relative;
+}
+.source-card:hover { transform: translateY(-2px); box-shadow: var(--elevation-3); }
+.source-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--elevation-2); }
+.source-card-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.source-favicon {
+  width: 16px; height: 16px; border-radius: 3px;
+  background: var(--surface-sunk); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.source-favicon-placeholder {
+  width: 16px; height: 16px; border-radius: 3px;
+  background: var(--accent-soft); display: flex; align-items: center; justify-content: center;
+}
+.source-domain { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-muted); }
+.source-category-badge {
+  display: inline-flex; align-items: center; padding: 1px 7px;
+  border-radius: var(--radius-pill); font-size: 11px; font-weight: 700;
+  margin-left: auto;
+}
+.source-category-badge.arxiv { background: var(--accent-soft); color: var(--accent-soft-ink); }
+.source-category-badge.blog { background: var(--warning-soft); color: var(--warning); }
+.source-category-badge.docs { background: var(--success-soft); color: var(--success); }
+.source-title { font-size: var(--text-sm); font-weight: 600; color: var(--ink); line-height: 1.4; }
+.source-snippet { font-size: var(--text-xs); color: var(--ink-soft); margin-top: var(--space-1); line-height: 1.5; }
+.source-score-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.source-score-bar {
+  flex: 1; height: 3px; background: var(--surface-sunk); border-radius: 2px; overflow: hidden;
+}
+.source-score-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+.source-score-num { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-faint); }
+
+/* Evidence panel */
+.evidence-panel { padding: var(--space-4); }
+.evidence-section { margin-bottom: var(--space-5); }
+.evidence-section-title {
+  font-size: var(--text-xs); font-weight: 700; color: var(--ink-faint);
+  text-transform: uppercase; letter-spacing: .08em;
+  margin-bottom: var(--space-3);
+}
+.evidence-snippet {
+  padding: var(--space-3) var(--space-4);
+  background: var(--highlight-bg);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm); color: var(--ink); line-height: 1.6;
+}
+.evidence-snippet-meta {
+  display: flex; align-items: center; gap: var(--space-2);
+  margin-top: var(--space-2); font-size: var(--text-xs); color: var(--ink-muted);
+}
+
+/* ===== PIPELINE PANEL (Retrieval state view) ===== */
+.pipeline-area {
+  padding: var(--space-6);
+  display: flex; flex-direction: column; gap: var(--space-5);
+}
+.pipeline-query-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4);
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--elevation-2);
+}
+.pipeline-query-text {
+  font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700;
+  color: var(--ink); flex: 1;
+}
+.pipeline-status {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-sm); color: var(--ink-soft);
+}
+.pipeline-spinner {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--layer-line); border-top-color: var(--accent);
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.pipeline-grid {
+  display: grid; grid-template-columns: 1fr 340px; gap: var(--space-5);
+  align-items: start;
+}
+.pipeline-stepper {
+  background: var(--surface); border-radius: var(--radius); box-shadow: var(--elevation-2);
+  overflow: hidden;
+}
+.pipeline-stepper-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--layer-line);
+  font-family: var(--font-display); font-size: var(--text-label);
+  font-weight: 700; color: var(--ink); text-transform: uppercase; letter-spacing: .04em;
+}
+.stepper-list {
+  padding: var(--space-4) var(--space-5);
+  display: flex; flex-direction: column;
+}
+.stepper-step {
+  display: flex; gap: var(--space-4); position: relative;
+}
+.stepper-step:not(:last-child) .stepper-line {
+  position: absolute; left: 11px; top: 28px;
+  bottom: 0; width: 2px; background: var(--layer-line);
+}
+.stepper-node {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; z-index: 1;
+}
+.stepper-node.done { background: var(--success); }
+.stepper-node.active { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); }
+.stepper-node.pending { background: var(--surface-sunk); border: 2px solid var(--track-off); }
+.stepper-body { flex: 1; padding-bottom: var(--space-6); }
+.stepper-step:last-child .stepper-body { padding-bottom: var(--space-2); }
+.stepper-name {
+  font-size: var(--text-ui); font-weight: 600; color: var(--ink); line-height: 1;
+  padding-top: 3px;
+}
+.stepper-step.active-step .stepper-name { color: var(--accent-deep); }
+.stepper-step.pending-step .stepper-name { color: var(--ink-muted); }
+.stepper-detail { margin-top: var(--space-2); font-size: var(--text-sm); color: var(--ink-soft); }
+.stepper-chips {
+  display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2);
+}
+.stepper-chip {
+  padding: 3px 10px; border-radius: var(--radius-pill);
+  background: var(--accent-soft); color: var(--accent-soft-ink);
+  font-size: var(--text-xs); font-weight: 600; font-family: var(--font-mono);
+}
+.stepper-time {
+  margin-left: auto; font-family: var(--font-mono); font-size: var(--text-xs);
+  color: var(--ink-faint); font-variant-numeric: tabular-nums;
+  align-self: flex-start; padding-top: 4px; flex-shrink: 0;
+}
+.radar-panel {
+  background: var(--surface); border-radius: var(--radius); box-shadow: var(--elevation-2);
+  overflow: hidden;
+}
+.radar-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--layer-line);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.radar-title {
+  font-family: var(--font-display); font-size: var(--text-label);
+  font-weight: 700; color: var(--ink); text-transform: uppercase; letter-spacing: .04em;
+}
+.radar-count {
+  font-size: var(--text-sm); font-weight: 600; color: var(--ink-muted);
+  font-family: var(--font-mono);
+}
+.radar-list { padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-1); }
+.radar-row {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+  animation: row-in var(--duration-fast) var(--ease) both;
+}
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.radar-row.live { background: var(--accent-row-tint); }
+.radar-status-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.radar-status-dot.ok { background: var(--success); }
+.radar-status-dot.live { background: var(--accent); animation: pulse-dot 1.5s infinite; }
+.radar-status-dot.queue { background: var(--track-off); }
+.radar-domain { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-soft); flex: 1; }
+.radar-cat { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: var(--radius-pill); }
+.radar-cat.arxiv { background: var(--accent-soft); color: var(--accent-soft-ink); }
+.radar-cat.blog { background: var(--warning-soft); color: var(--warning); }
+.radar-cat.docs { background: var(--success-soft); color: var(--success); }
+.radar-latency { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-faint); }
+
+/* ===== COMMAND SCREEN ===== */
+.command-screen {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: var(--space-12) var(--space-6);
+}
+.command-hero { text-align: center; max-width: 640px; width: 100%; }
+.command-hero-icon {
+  width: 72px; height: 72px;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-5);
+}
+.command-hero-icon img { width: 100%; height: 100%; object-fit: contain; }
+.command-hero-title {
+  font-family: var(--font-display); font-size: var(--text-display);
+  font-weight: 700; color: var(--ink); letter-spacing: -.02em;
+  line-height: 1.15; margin-bottom: var(--space-4);
+}
+.command-hero-desc {
+  font-size: var(--text-base); color: var(--ink-soft); max-width: 480px; margin: 0 auto;
+}
+.command-superbar {
+  margin-top: var(--space-8);
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--elevation-3);
+  overflow: hidden;
+  width: 100%;
+}
+.command-superbar-input-row {
+  display: flex; align-items: flex-end; gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+}
+.command-superbar-textarea {
+  flex: 1; resize: none; border: none; outline: none; background: transparent;
+  font-size: var(--text-base); color: var(--ink); line-height: 1.5;
+  min-height: 60px; font-family: var(--font-body);
+}
+.command-superbar-textarea::placeholder { color: var(--ink-faint); }
+.command-superbar-submit {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-3) var(--space-5); height: 44px;
+  background: var(--accent); color: var(--on-accent);
+  border-radius: var(--radius-md); font-weight: 600; font-size: var(--text-ui);
+  box-shadow: var(--shadow-accent-rest);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+  white-space: nowrap; flex-shrink: 0;
+}
+.command-superbar-submit:hover { transform: translateY(-2px); box-shadow: var(--shadow-accent-hover); }
+.command-superbar-footer {
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--layer-line);
+  display: flex; align-items: center; gap: var(--space-3);
+  background: var(--surface-sunk);
+}
+.command-superbar-footer-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: var(--radius-pill);
+  background: var(--surface); border: 1px solid var(--layer-line);
+  font-size: var(--text-xs); font-weight: 600; color: var(--ink-soft);
+  box-shadow: var(--elevation-1); cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.command-superbar-footer-chip:hover { background: var(--accent-tint-hover); color: var(--ink); }
+.command-superbar-footer-chip.active { background: var(--accent-soft); color: var(--accent-soft-ink); border-color: transparent; }
+.command-superbar-footer-sep { flex: 1; }
+.command-suggestions {
+  margin-top: var(--space-6); width: 100%;
+  display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: center;
+}
+.suggestion-chip {
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface); border: 1px solid var(--layer-line);
+  border-radius: var(--radius-pill); font-size: var(--text-sm); color: var(--ink-soft);
+  box-shadow: var(--elevation-1); cursor: pointer;
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast),
+              background var(--duration-fast), color var(--duration-fast);
+  text-align: left;
+}
+.suggestion-chip:hover { transform: translateY(-2px); box-shadow: var(--elevation-2); color: var(--ink); }
+.command-kbd-row {
+  margin-top: var(--space-8);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4);
+  justify-content: center; font-size: var(--text-xs); color: var(--ink-faint);
+}
+.kbd {
+  display: inline-flex; align-items: center;
+  background: var(--surface); border-radius: var(--radius-xs);
+  padding: 2px 7px; font-family: var(--font-mono);
+  color: var(--ink-muted); box-shadow: var(--elevation-1);
+  border: 1px solid var(--layer-line);
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--layer-line); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--track-off); }
+
+/* ===== DEMO TABS ===== */
+.demo-nav {
+  position: fixed; bottom: var(--space-4); left: 50%; transform: translateX(-50%);
+  z-index: 100;
+  display: flex; gap: var(--space-2);
+  background: var(--glass-float);
+  backdrop-filter: blur(var(--blur-amount));
+  border: 1px solid var(--glass-edge);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2);
+  box-shadow: var(--elevation-4);
+}
+.demo-nav-btn {
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill);
+  font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft);
+  transition: background var(--duration-fast), color var(--duration-fast);
+  white-space: nowrap;
+}
+.demo-nav-btn:hover { color: var(--ink); background: var(--accent-tint-hover); }
+.demo-nav-btn.active { background: var(--accent); color: var(--on-accent); }
+.screen { display: none; }
+.screen.visible { display: flex; flex-direction: column; min-height: calc(100vh - 52px); }
+
+/* ===== SVG ICONS inline ===== */
+.icon { display: inline-block; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- ===== TOP BAR (shared) ===== -->
+<header class="topbar">
+  <button class="topbar-icon-btn" aria-label="历史记录 (Ctrl+B)" onclick="toggleSidebar()" id="sidebar-toggle-btn">
+    <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+  </button>
+  <a class="topbar-brand" href="#" onclick="showScreen('command'); return false;" aria-label="Mile AI Search 首页">
+    <span class="topbar-brand-icon">
+      <img src="appLogo.png" alt="Mile AI Search logo" />
+    </span>
+    <span class="topbar-brand-name">Mile AI Search</span>
+  </a>
+  <span class="topbar-sep" id="topbar-sep"></span>
+  <span class="topbar-breadcrumb" id="topbar-breadcrumb" style="display:none">NVIDIA Hopper TMA 异步拷贝指令优化分析</span>
+  <div class="topbar-actions">
+    <div class="theme-picker" id="theme-picker">
+      <button class="theme-trigger" id="theme-trigger" aria-label="主题色" aria-haspopup="true" aria-expanded="false" title="主题色">
+        <span class="theme-trigger-dot" id="theme-trigger-dot"></span>
+      </button>
+      <div class="theme-dropdown" id="theme-dropdown" role="menu">
+        <div class="theme-dropdown-label">主题色</div>
+        <div class="theme-option-sep"></div>
+        <button class="theme-option" id="theme-custom-option">
+          <span class="theme-option-dot rainbow"></span>
+          <span class="theme-option-name">自定义颜色</span>
+          <span class="theme-option-check"></span>
+        </button>
+        <input type="color" class="theme-color-input" id="theme-color-input" value="#FA7B29" aria-label="自定义主题色" />
+      </div>
+    </div>
+    <button class="topbar-btn-secondary" onclick="showScreen('retrieval')">
+      <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.1-7.5"/></svg>
+      新检索
+    </button>
+    <button class="topbar-icon-btn" aria-label="设置">
+      <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar" id="main-sidebar" aria-label="历史记录">
+  <div class="sidebar-header">
+    <span class="sidebar-title">历史记录</span>
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="收起侧边栏">
+      <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+  </div>
+  <div class="sidebar-body">
+    <div class="sidebar-section-label">今天</div>
+    <button class="sidebar-item active" onclick="showScreen('result')">
+      <span class="sidebar-item-icon">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <span class="sidebar-item-text">NVIDIA Hopper TMA 异步拷贝指令优化</span>
+      <span class="sidebar-item-badge">12</span>
+    </button>
+    <button class="sidebar-item" onclick="showScreen('result')">
+      <span class="sidebar-item-icon">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <span class="sidebar-item-text">FlashAttention-3 FP8 内核吞吐基准</span>
+      <span class="sidebar-item-meta">8个信源</span>
+    </button>
+    <button class="sidebar-item" onclick="showScreen('result')">
+      <span class="sidebar-item-icon">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <span class="sidebar-item-text">RDMA over Converged Ethernet v2 拥塞控制</span>
+      <span class="sidebar-item-meta">6个信源</span>
+    </button>
+    <div class="sidebar-section-label">昨天</div>
+    <button class="sidebar-item">
+      <span class="sidebar-item-icon">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <span class="sidebar-item-text">CUDA Graph 捕获与回放原理</span>
+      <span class="sidebar-item-meta">5个信源</span>
+    </button>
+    <button class="sidebar-item">
+      <span class="sidebar-item-icon">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <span class="sidebar-item-text">Mamba SSM 状态空间模型选择机制</span>
+      <span class="sidebar-item-meta">9个信源</span>
+    </button>
+    <button class="sidebar-item">
+      <span class="sidebar-item-icon">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <span class="sidebar-item-text">Triton 编译器 shared memory 优化</span>
+      <span class="sidebar-item-meta">7个信源</span>
+    </button>
+    <div class="sidebar-section-label">本周</div>
+    <button class="sidebar-item">
+      <span class="sidebar-item-icon">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <span class="sidebar-item-text">vLLM PagedAttention KV Cache 管理</span>
+      <span class="sidebar-item-meta">11个信源</span>
+    </button>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-text">
+      <span class="sidebar-kbd">Ctrl+B</span> 切换侧边栏
+    </div>
+  </div>
+</nav>
+
+<!-- ===== SCREEN WRAPPER ===== -->
+<div class="main-content" id="main-content">
+
+  <!-- ============================
+       SCREEN 1: COMMAND
+       ============================ -->
+  <div class="screen" id="screen-command">
+    <div class="command-screen">
+      <div class="command-hero">
+        <div class="command-hero-icon">
+          <img src="appLogo.png" alt="Mile AI Search logo" />
+        </div>
+        <h1 class="command-hero-title">Mile AI Search</h1>
+        <p class="command-hero-desc">输入技术问题，得到带引用角标的研报。每个结论都能追溯到原文段落。</p>
+        <div class="command-superbar">
+          <div class="command-superbar-input-row">
+            <textarea class="command-superbar-textarea" placeholder="NVIDIA Hopper TMA 异步拷贝指令的优化策略是什么？" rows="2"></textarea>
+            <button class="command-superbar-submit" onclick="showScreen('retrieval')">
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              检索
+            </button>
+          </div>
+          <div class="command-superbar-footer">
+            <button class="command-superbar-footer-chip active">
+              <svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Web
+            </button>
+            <button class="command-superbar-footer-chip">
+              <svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              学术
+            </button>
+            <button class="command-superbar-footer-chip">
+              <svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              代码
+            </button>
+            <span class="command-superbar-footer-sep"></span>
+            <span style="font-size:12px;color:var(--ink-faint)">Tavily · DeepSeek</span>
+          </div>
+        </div>
+        <div class="command-suggestions">
+          <button class="suggestion-chip" onclick="showScreen('retrieval')">FlashAttention-3 FP8 内核吞吐基准</button>
+          <button class="suggestion-chip" onclick="showScreen('retrieval')">CUDA Graph 捕获与回放原理</button>
+          <button class="suggestion-chip" onclick="showScreen('retrieval')">Mamba SSM 选择机制详解</button>
+          <button class="suggestion-chip" onclick="showScreen('retrieval')">vLLM PagedAttention KV Cache 管理</button>
+        </div>
+        <div class="command-kbd-row">
+          <span><kbd class="kbd">Enter</kbd> 提交</span>
+          <span><kbd class="kbd">Shift+Enter</kbd> 换行</span>
+          <span><kbd class="kbd">Ctrl+K</kbd> 聚焦</span>
+          <span><kbd class="kbd">Ctrl+B</kbd> 历史</span>
+          <span><kbd class="kbd">Esc</kbd> 停止</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================
+       SCREEN 2: RETRIEVAL
+       ============================ -->
+  <div class="screen" id="screen-retrieval">
+    <!-- Tab Strip -->
+    <div class="tab-strip">
+      <button class="tab-item active">
+        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        检索流水线
+      </button>
+      <div class="tab-strip-sep"></div>
+      <button class="topbar-btn-secondary" onclick="showScreen('command')" style="margin: 0;">
+        <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        停止检索
+      </button>
+    </div>
+    <div class="pipeline-area">
+      <!-- Query bar -->
+      <div class="pipeline-query-bar">
+        <div>
+          <div style="font-size:var(--text-sm);color:var(--ink-muted);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">正在检索</div>
+          <div class="pipeline-query-text">NVIDIA Hopper TMA 异步拷贝指令优化</div>
+        </div>
+        <div class="pipeline-status">
+          <span class="pipeline-spinner"></span>
+          <span>抓取信源中</span>
+        </div>
+      </div>
+      <!-- Main grid -->
+      <div class="pipeline-grid">
+        <!-- Left: Stepper -->
+        <div class="pipeline-stepper">
+          <div class="pipeline-stepper-header">检索流水线</div>
+          <div class="stepper-list">
+            <!-- Step 1 done -->
+            <div class="stepper-step done-step">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+                <div class="stepper-node done">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="stepper-line" style="position:static;width:2px;height:24px;background:var(--layer-line);margin:2px 0;"></div>
+              </div>
+              <div class="stepper-body" style="padding-bottom:var(--space-2)">
+                <div style="display:flex;align-items:flex-start;gap:var(--space-3)">
+                  <div style="flex:1">
+                    <div class="stepper-name">查询改写</div>
+                    <div class="stepper-chips">
+                      <span class="stepper-chip">Hopper TMA instruction</span>
+                      <span class="stepper-chip">H100 async copy optimization</span>
+                      <span class="stepper-chip">NVIDIA wgmma TMA benchmark</span>
+                    </div>
+                  </div>
+                  <span class="stepper-time">48ms</span>
+                </div>
+              </div>
+            </div>
+            <!-- Step 2 done -->
+            <div class="stepper-step done-step">
+              <div style="display:flex;flex-direction:column;align-items:center">
+                <div class="stepper-node done">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div style="width:2px;height:24px;background:var(--layer-line);margin:2px 0;"></div>
+              </div>
+              <div class="stepper-body" style="padding-bottom:var(--space-2)">
+                <div style="display:flex;align-items:flex-start;gap:var(--space-3)">
+                  <div style="flex:1">
+                    <div class="stepper-name">并发检索</div>
+                    <div class="stepper-detail">3 个改写词并行检索，共抓取 18 个候选信源</div>
+                  </div>
+                  <span class="stepper-time">1,240ms</span>
+                </div>
+              </div>
+            </div>
+            <!-- Step 3 active -->
+            <div class="stepper-step active-step">
+              <div style="display:flex;flex-direction:column;align-items:center">
+                <div class="stepper-node active">
+                  <div class="pipeline-spinner" style="width:10px;height:10px;border-width:2px;border-color:rgba(255,255,255,.3);border-top-color:white;"></div>
+                </div>
+                <div style="width:2px;height:24px;background:var(--layer-line);margin:2px 0;"></div>
+              </div>
+              <div class="stepper-body" style="padding-bottom:var(--space-2)">
+                <div style="display:flex;align-items:flex-start;gap:var(--space-3)">
+                  <div style="flex:1">
+                    <div class="stepper-name">分类重排</div>
+                    <div class="stepper-detail">正在对 12 个信源评分（相关度、权威度、时效性）</div>
+                  </div>
+                  <span class="stepper-time" style="color:var(--accent)">进行中</span>
+                </div>
+              </div>
+            </div>
+            <!-- Step 4 pending -->
+            <div class="stepper-step pending-step">
+              <div style="display:flex;flex-direction:column;align-items:center">
+                <div class="stepper-node pending"></div>
+                <div style="width:2px;height:24px;background:var(--layer-line);margin:2px 0;"></div>
+              </div>
+              <div class="stepper-body" style="padding-bottom:var(--space-2)">
+                <div class="stepper-name">上下文拼装</div>
+                <div class="stepper-detail" style="color:var(--ink-faint)">等待重排完成</div>
+              </div>
+            </div>
+            <!-- Step 5 pending -->
+            <div class="stepper-step pending-step">
+              <div style="display:flex;flex-direction:column;align-items:center">
+                <div class="stepper-node pending"></div>
+              </div>
+              <div class="stepper-body" style="padding-bottom:0">
+                <div class="stepper-name">生成研报</div>
+                <div class="stepper-detail" style="color:var(--ink-faint)">等待信源准备就绪</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Right: Source Radar -->
+        <div class="radar-panel">
+          <div class="radar-header">
+            <span class="radar-title">信源抓取</span>
+            <span class="radar-count">12 / 18</span>
+          </div>
+          <div class="radar-list">
+            <div class="radar-row" style="animation-delay:0ms">
+              <span class="radar-status-dot ok"></span>
+              <span class="radar-domain">arxiv.org</span>
+              <span class="radar-cat arxiv">arxiv</span>
+              <span class="radar-latency">340ms</span>
+            </div>
+            <div class="radar-row" style="animation-delay:60ms">
+              <span class="radar-status-dot ok"></span>
+              <span class="radar-domain">docs.nvidia.com</span>
+              <span class="radar-cat docs">docs</span>
+              <span class="radar-latency">520ms</span>
+            </div>
+            <div class="radar-row" style="animation-delay:120ms">
+              <span class="radar-status-dot ok"></span>
+              <span class="radar-domain">developer.nvidia.com</span>
+              <span class="radar-cat docs">docs</span>
+              <span class="radar-latency">680ms</span>
+            </div>
+            <div class="radar-row live" style="animation-delay:180ms">
+              <span class="radar-status-dot live"></span>
+              <span class="radar-domain">github.com</span>
+              <span class="radar-cat blog">code</span>
+              <span class="radar-latency" style="color:var(--accent)">---</span>
+            </div>
+            <div class="radar-row" style="animation-delay:240ms">
+              <span class="radar-status-dot ok"></span>
+              <span class="radar-domain">proceedings.mlsys.org</span>
+              <span class="radar-cat arxiv">paper</span>
+              <span class="radar-latency">890ms</span>
+            </div>
+            <div class="radar-row" style="animation-delay:300ms">
+              <span class="radar-status-dot ok"></span>
+              <span class="radar-domain">openai.com</span>
+              <span class="radar-cat blog">blog</span>
+              <span class="radar-latency">410ms</span>
+            </div>
+            <div class="radar-row" style="animation-delay:360ms">
+              <span class="radar-status-dot ok"></span>
+              <span class="radar-domain">pytorch.org</span>
+              <span class="radar-cat docs">docs</span>
+              <span class="radar-latency">320ms</span>
+            </div>
+            <div class="radar-row live" style="animation-delay:420ms">
+              <span class="radar-status-dot live"></span>
+              <span class="radar-domain">huggingface.co</span>
+              <span class="radar-cat blog">blog</span>
+              <span class="radar-latency" style="color:var(--accent)">---</span>
+            </div>
+            <div class="radar-row" style="background:var(--surface-sunk);border-radius:var(--radius-md);animation-delay:480ms">
+              <span class="radar-status-dot queue"></span>
+              <span class="radar-domain" style="color:var(--ink-faint)">semianalysis.com</span>
+              <span class="radar-cat blog" style="background:var(--surface-sunk);color:var(--ink-faint)">queue</span>
+              <span class="radar-latency">---</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================
+       SCREEN 3: RESULT
+       ============================ -->
+  <div class="screen" id="screen-result">
+    <!-- Tab Strip -->
+    <div class="tab-strip">
+      <button class="tab-item active" id="tab-report" onclick="switchResultTab('report')">
+        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        研报
+      </button>
+      <button class="tab-item" id="tab-observatory" onclick="switchResultTab('observatory')">
+        <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        观测台
+      </button>
+      <div class="tab-strip-sep"></div>
+      <div style="display:flex;align-items:center;gap:var(--space-3);margin-right:var(--space-2)">
+        <span style="font-size:var(--text-sm);color:var(--ink-muted)">
+          <span style="font-family:var(--font-mono);font-variant-numeric:tabular-nums">12</span> 个信源
+          ·
+          <span style="font-family:var(--font-mono);font-variant-numeric:tabular-nums">3,240</span>ms
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 10px;border-radius:var(--radius-pill);background:var(--success-soft);color:var(--success);font-size:var(--text-xs);font-weight:700;">
+          <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;"></span>
+          高共识
+        </span>
+      </div>
+      <button class="topbar-btn-secondary" onclick="showScreen('retrieval')">
+        <svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.1-7.5"/></svg>
+        新检索
+      </button>
+    </div>
+
+    <!-- Result Content Area -->
+    <div class="content-area">
+      <!-- Left: Conversation / Report -->
+      <div class="conv-panel">
+        <div class="conv-panel-header">
+          <div class="conv-panel-title">
+            <span class="conv-panel-title-dot"></span>
+            研报内容
+          </div>
+          <div class="conv-panel-actions">
+            <button class="topbar-icon-btn" aria-label="复制研报">
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <button class="topbar-icon-btn" aria-label="导出 BibTeX">
+              <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="conv-messages">
+          <!-- User query -->
+          <div class="msg-user">
+            <div class="msg-user-bubble">NVIDIA Hopper TMA 异步拷贝指令优化分析</div>
+          </div>
+          <!-- AI response -->
+          <div class="msg-ai">
+            <div class="msg-ai-avatar">
+              <img src="appLogo.png" alt="Mile AI" />
+            </div>
+            <div class="msg-ai-content">
+              <div class="msg-ai-meta">
+                <span class="msg-ai-name">Mile AI</span>
+                <span class="msg-ai-time">刚刚</span>
+                <span class="msg-ai-badge">
+                  <span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;"></span>
+                  12 个信源
+                </span>
+              </div>
+              <!-- Steps block (collapsed) -->
+              <div class="steps-block">
+                <div class="steps-block-header" onclick="this.parentElement.classList.toggle('open')">
+                  <span class="steps-block-title">
+                    <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    检索过程
+                  </span>
+                  <span class="steps-block-toggle">3,240ms · 5 步完成</span>
+                </div>
+                <div class="steps-list" style="display:none" id="steps-expand">
+                  <div class="step-row"><span class="step-dot done"></span>查询改写（3 个关键词）<span class="step-time">48ms</span></div>
+                  <div class="step-row"><span class="step-dot done"></span>并发检索（18 个候选）<span class="step-time">1,240ms</span></div>
+                  <div class="step-row"><span class="step-dot done"></span>分类重排（12 个通过）<span class="step-time">620ms</span></div>
+                  <div class="step-row"><span class="step-dot done"></span>上下文拼装<span class="step-time">180ms</span></div>
+                  <div class="step-row"><span class="step-dot done"></span>生成研报<span class="step-time">1,152ms</span></div>
+                </div>
+              </div>
+              <div class="msg-ai-bubble" style="margin-top:var(--space-3)">
+                <p>NVIDIA Hopper 架构（H100/H200）引入了 Tensor Memory Accelerator（TMA）单元，是 GPU 异步数据搬运的重要革新。TMA 能够在 SM 执行计算的同时独立搬运数据，从而显著减少内存访问延迟。<button class="cite-badge" title="查看来源 1">1</button></p>
+                <p style="margin-top:var(--space-4);font-family:var(--font-display);font-size:var(--text-lg);font-weight:700;color:var(--ink)">TMA 核心机制</p>
+                <p>TMA 使用 <code style="font-family:var(--font-mono);font-size:var(--text-sm);background:var(--surface-sunk);border-radius:var(--radius-xs);padding:1px 5px">cp.async.bulk</code> 指令族实现 Global → Shared Memory 的大块数据传输。与传统 <code style="font-family:var(--font-mono);font-size:var(--text-sm);background:var(--surface-sunk);border-radius:var(--radius-xs);padding:1px 5px">cp.async</code> 相比，TMA 支持多维张量描述符（Tensor Map），由硬件完成地址计算，CPU 开销降低约 40%。<button class="cite-badge">2</button><button class="cite-badge">3</button></p>
+                <p style="margin-top:var(--space-4);font-family:var(--font-display);font-size:var(--text-lg);font-weight:700;color:var(--ink)">性能数据</p>
+                <p>在 FlashAttention-3 中，TMA 带宽利用率从 H100 SXM5 的理论上限 3.35 TB/s 中实际达到 <strong>2.8 TB/s（83.6%）</strong>，相比 A100 提升约 3.2×。<button class="cite-badge">4</button></p>
+              </div>
+              <!-- Evidence rows -->
+              <div class="evidence-row">
+                <div class="evidence-row-num">2</div>
+                <div class="evidence-row-body">
+                  <div class="evidence-row-title">NVIDIA Hopper Architecture TMA Documentation</div>
+                  <div class="evidence-row-url">docs.nvidia.com · H100 Tensor Core GPU Architecture</div>
+                </div>
+              </div>
+              <div class="evidence-row">
+                <div class="evidence-row-num">4</div>
+                <div class="evidence-row-body">
+                  <div class="evidence-row-title">FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision</div>
+                  <div class="evidence-row-url">arxiv.org · 2407.08608</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Input bar -->
+        <div class="input-bar">
+          <div class="input-row">
+            <textarea class="input-textarea" placeholder="继续追问，或输入新的技术问题" rows="1"></textarea>
+            <div class="input-actions">
+              <button class="input-icon-btn" aria-label="附件">
+                <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </button>
+              <button class="input-send-btn" aria-label="发送">
+                <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="input-bar-meta">
+            <button class="input-mode-chip active">
+              <svg class="icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Web
+            </button>
+            <button class="input-mode-chip">
+              <svg class="icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              学术
+            </button>
+            <span class="input-bar-hint"><kbd class="kbd" style="font-size:11px">Enter</kbd> 发送 &nbsp; <kbd class="kbd" style="font-size:11px">Shift+Enter</kbd> 换行</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Preview/Sources Panel -->
+      <div class="preview-panel">
+        <div class="preview-panel-header">
+          <div class="preview-panel-title">
+            <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            信源与证据
+          </div>
+          <div class="preview-tab-group">
+            <button class="preview-tab active" id="ptab-sources" onclick="switchPreviewTab('sources')">信源</button>
+            <button class="preview-tab" id="ptab-evidence" onclick="switchPreviewTab('evidence')">证据</button>
+          </div>
+        </div>
+        <!-- Sources view -->
+        <div class="preview-body" id="preview-sources">
+          <div class="source-list">
+            <div class="source-card active">
+              <div class="source-card-header">
+                <div class="source-favicon-placeholder">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <span class="source-domain">arxiv.org</span>
+                <span class="source-category-badge arxiv">arxiv</span>
+              </div>
+              <div class="source-title">FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision</div>
+              <div class="source-snippet">Utilizes TMA for asynchronous SMEM loads, achieving 2.8 TB/s memory bandwidth on H100...</div>
+              <div class="source-score-row">
+                <div class="source-score-bar"><div class="source-score-fill" style="width:92%"></div></div>
+                <span class="source-score-num">0.92</span>
+              </div>
+            </div>
+            <div class="source-card">
+              <div class="source-card-header">
+                <div class="source-favicon-placeholder">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <span class="source-domain">docs.nvidia.com</span>
+                <span class="source-category-badge docs">docs</span>
+              </div>
+              <div class="source-title">NVIDIA Hopper Architecture In-Depth — TMA Documentation</div>
+              <div class="source-snippet">Tensor Memory Accelerator enables multi-dimensional tensor transfers with hardware-managed address calculation...</div>
+              <div class="source-score-row">
+                <div class="source-score-bar"><div class="source-score-fill" style="width:88%"></div></div>
+                <span class="source-score-num">0.88</span>
+              </div>
+            </div>
+            <div class="source-card">
+              <div class="source-card-header">
+                <div class="source-favicon-placeholder">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <span class="source-domain">developer.nvidia.com</span>
+                <span class="source-category-badge docs">docs</span>
+              </div>
+              <div class="source-title">CUDA Programming Guide — Asynchronous Data Movement</div>
+              <div class="source-snippet">cp.async.bulk instruction family for Hopper TMA, supporting 1D–5D tensor copies from global to shared memory...</div>
+              <div class="source-score-row">
+                <div class="source-score-bar"><div class="source-score-fill" style="width:85%"></div></div>
+                <span class="source-score-num">0.85</span>
+              </div>
+            </div>
+            <div class="source-card">
+              <div class="source-card-header">
+                <div class="source-favicon-placeholder">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <span class="source-domain">semianalysis.com</span>
+                <span class="source-category-badge blog">blog</span>
+              </div>
+              <div class="source-title">H100 Deep Dive: TMA, WGMMA, and the Future of GPU Memory Hierarchy</div>
+              <div class="source-snippet">SemiAnalysis breakdown of H100 architectural improvements including TMA bandwidth analysis...</div>
+              <div class="source-score-row">
+                <div class="source-score-bar"><div class="source-score-fill" style="width:78%"></div></div>
+                <span class="source-score-num">0.78</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Evidence view (hidden) -->
+        <div class="preview-body" id="preview-evidence" style="display:none">
+          <div class="evidence-panel">
+            <div class="evidence-section">
+              <div class="evidence-section-title">引用 [2] — 相关段落</div>
+              <div class="evidence-snippet">
+                TMA enables multi-dimensional tensor copy operations from global memory to shared memory with hardware-managed stride and padding. The instruction requires a tensor descriptor (Tensor Map) to be created in host memory, specifying the tensor dimensions and data layout.
+              </div>
+              <div class="evidence-snippet-meta">
+                <svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                docs.nvidia.com · Hopper Architecture In-Depth · 第 4.2 节
+              </div>
+            </div>
+            <div class="evidence-section">
+              <div class="evidence-section-title">引用 [4] — 相关段落</div>
+              <div class="evidence-snippet">
+                We achieve 2.8 TB/s memory bandwidth (83.6% of peak) on H100 SXM5 by leveraging TMA for asynchronous SMEM loads. This is a 3.2x improvement over A100, primarily due to TMA's ability to overlap data movement with warpgroup matrix multiply (WGMMA) operations.
+              </div>
+              <div class="evidence-snippet-meta">
+                <svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2H3.5A1.5 1.5 0 0 0 2 3.5v17A1.5 1.5 0 0 0 3.5 22h18A1.5 1.5 0 0 0 23 20.5v-17A1.5 1.5 0 0 0 21.5 2z"/></svg>
+                arxiv.org · 2407.08608 · Table 1
+              </div>
+            </div>
+            <div class="evidence-section">
+              <div class="evidence-section-title">引用 [1] — 相关段落</div>
+              <div class="evidence-snippet">
+                The Tensor Memory Accelerator (TMA) unit in the H100 GPU is a dedicated hardware block that can independently execute memory copy operations without SM intervention, significantly reducing SM instruction overhead for memory-bound kernels.
+              </div>
+              <div class="evidence-snippet-meta">
+                <svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2H3.5A1.5 1.5 0 0 0 2 3.5v17A1.5 1.5 0 0 0 3.5 22h18A1.5 1.5 0 0 0 23 20.5v-17A1.5 1.5 0 0 0 21.5 2z"/></svg>
+                arxiv.org · H100 Architecture Whitepaper
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DEMO NAVIGATION ===== -->
+<nav class="demo-nav" aria-label="设计稿状态切换">
+  <button class="demo-nav-btn active" id="nav-command" onclick="showScreen('command')">首屏命令台</button>
+  <button class="demo-nav-btn" id="nav-retrieval" onclick="showScreen('retrieval')">检索流水线</button>
+  <button class="demo-nav-btn" id="nav-result" onclick="showScreen('result')">研报工作台</button>
+</nav>
+
+<script>
+// ===== SIDEBAR TOGGLE =====
+let sidebarCompact = false;
+
+function toggleSidebar() {
+  sidebarCompact = !sidebarCompact;
+  const sidebar = document.getElementById('main-sidebar');
+  const content = document.getElementById('main-content');
+  if (sidebarCompact) {
+    sidebar.classList.add('compact');
+    content.classList.add('compact-sidebar');
+    content.style.marginLeft = 'var(--w-sidebar-compact)';
+  } else {
+    sidebar.classList.remove('compact');
+    content.classList.remove('compact-sidebar');
+    content.style.marginLeft = 'var(--w-sidebar)';
+  }
+}
+
+// ===== SCREEN SWITCHING =====
+function showScreen(name) {
+  ['command','retrieval','result'].forEach(s => {
+    document.getElementById('screen-' + s).classList.remove('visible');
+    document.getElementById('nav-' + s).classList.remove('active');
+  });
+  document.getElementById('screen-' + name).classList.add('visible');
+  document.getElementById('nav-' + name).classList.add('active');
+
+  // Update breadcrumb
+  const sep = document.getElementById('topbar-sep');
+  const crumb = document.getElementById('topbar-breadcrumb');
+  if (name === 'command') {
+    sep.style.display = 'none';
+    crumb.style.display = 'none';
+  } else {
+    sep.style.display = 'block';
+    crumb.style.display = 'block';
+  }
+}
+
+// ===== RESULT TAB SWITCHING =====
+function switchResultTab(tab) {
+  document.getElementById('tab-report').classList.toggle('active', tab === 'report');
+  document.getElementById('tab-observatory').classList.toggle('active', tab === 'observatory');
+}
+
+// ===== PREVIEW PANEL TAB =====
+function switchPreviewTab(tab) {
+  document.getElementById('ptab-sources').classList.toggle('active', tab === 'sources');
+  document.getElementById('ptab-evidence').classList.toggle('active', tab === 'evidence');
+  document.getElementById('preview-sources').style.display = tab === 'sources' ? 'block' : 'none';
+  document.getElementById('preview-evidence').style.display = tab === 'evidence' ? 'block' : 'none';
+}
+
+// ===== STEPS EXPAND =====
+document.querySelectorAll('.steps-block-header').forEach(el => {
+  el.addEventListener('click', () => {
+    const list = el.nextElementSibling;
+    if (list) {
+      list.style.display = list.style.display === 'none' ? 'flex' : 'none';
+    }
+  });
+});
+
+// ===== THEME ENGINE =====
+// 预设色板 + 自定义色。预设走 html[data-accent] 覆盖块；自定义由 JS 派生整套令牌。
+// 预设之外的颜色用这个令牌模板生成，与预设保持同一套视觉规则。
+const THEMES = {
+  orange:  { hex: '#FA7B29' },  // 品牌橙（appLogo 取色）
+  blue:    { hex: '#2563EB' },
+  emerald: { hex: '#059669' },
+  violet:  { hex: '#7C3AED' },
+  rose:    { hex: '#E11D48' },
+  slate:   { hex: '#475569' },
+};
+const THEME_ORDER = ['orange','blue','emerald','violet','rose','slate'];
+
+// WCAG 相对亮度：白字是否可读（≥0.30 视为可放白字，低于则提亮）
+function luminance(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const f = c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+
+// hex 变亮/变暗 amount ∈ [-1,1]：正数向白靠近，负数向黑靠近
+function shade(hex, amount) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
+  const t = amount < 0 ? 0 : 255, p = Math.abs(amount);
+  r = Math.round(r + (t - r) * p); g = Math.round(g + (t - g) * p); b = Math.round(b + (t - b) * p);
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function rgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+}
+
+// 生成自定义主题时提亮主色直到能承载白字（最多 3 次，每次 12%）
+function accessibleAccent(hex) {
+  let c = hex, i = 0;
+  while (luminance(c) < 0.30 && i < 3) { c = shade(c, 0.12); i++; }
+  return c;
+}
+
+let currentTheme = localStorage.getItem('mile-accent') || 'orange';
+let currentAccentHex = THEMES.orange.hex; // 触发器圆点显示色
+const themeCheck = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const THEME_LABELS = { orange:'品牌橙', blue:'蓝色', emerald:'绿色', violet:'紫色', rose:'红色', slate:'石墨' };
+
+function buildThemePicker() {
+  const dropdown = document.getElementById('theme-dropdown');
+  const sep = dropdown.querySelector('.theme-option-sep');
+  THEME_ORDER.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'theme-option';
+    btn.dataset.theme = name;
+    btn.innerHTML =
+      `<span class="theme-option-dot" style="--swatch:${THEMES[name].hex}"></span>` +
+      `<span class="theme-option-name">${THEME_LABELS[name]}</span>` +
+      `<span class="theme-option-check">${themeCheck}</span>`;
+    btn.addEventListener('click', () => { setTheme(name); closeThemeDropdown(); });
+    dropdown.insertBefore(btn, sep);
+  });
+  const customOpt = document.getElementById('theme-custom-option');
+  const input = document.getElementById('theme-color-input');
+  customOpt.addEventListener('click', () => input.click());
+  input.addEventListener('input', e => setTheme('custom:' + e.target.value));
+  // 触发器开关下拉
+  const trigger = document.getElementById('theme-trigger');
+  trigger.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = dropdown.classList.toggle('open');
+    trigger.setAttribute('aria-expanded', open);
+  });
+  // 点击面板外关闭
+  document.addEventListener('click', e => {
+    const picker = document.getElementById('theme-picker');
+    if (!picker.contains(e.target)) closeThemeDropdown();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeThemeDropdown();
+  });
+}
+
+function closeThemeDropdown() {
+  const dropdown = document.getElementById('theme-dropdown');
+  dropdown.classList.remove('open');
+  document.getElementById('theme-trigger').setAttribute('aria-expanded', 'false');
+}
+
+function setTheme(name) {
+  currentTheme = name;
+  localStorage.setItem('mile-accent', name);
+  const root = document.documentElement;
+  if (name.startsWith('custom:')) {
+    // 自定义色：从色值派生整套 accent 令牌
+    const hex = name.slice(7);
+    const accent = accessibleAccent(hex);
+    currentAccentHex = accent;
+    root.removeAttribute('data-accent');
+    const s = root.style;
+    s.setProperty('--accent', accent);
+    s.setProperty('--accent-deep', shade(accent, -0.18));
+    s.setProperty('--accent-soft', shade(accent, 0.92));
+    s.setProperty('--accent-soft-ink', shade(accent, -0.35));
+    s.setProperty('--accent-tint-hover', rgba(accent, 0.08));
+    s.setProperty('--accent-tint-press', rgba(accent, 0.16));
+    s.setProperty('--accent-glow', rgba(accent, 0.2));
+    s.setProperty('--accent-row-tint', rgba(accent, 0.04));
+    s.setProperty('--shadow-accent-rest', `0 6px 16px ${rgba(accent, 0.35)}`);
+    s.setProperty('--shadow-accent-hover', `0 12px 26px ${rgba(accent, 0.4)}`);
+    s.setProperty('--ring-focus-soft', `0 0 0 3px ${rgba(accent, 0.25)}`);
+  } else if (name === 'orange') {
+    root.removeAttribute('data-accent');
+    root.style.cssText = '';
+    currentAccentHex = THEMES.orange.hex;
+  } else {
+    root.style.cssText = '';
+    root.setAttribute('data-accent', name);
+    currentAccentHex = THEMES[name].hex;
+  }
+  syncThemeUI();
+}
+
+function syncThemeUI() {
+  // 触发器圆点跟随当前主题色
+  document.getElementById('theme-trigger-dot').style.background = currentAccentHex;
+  // 勾选标记
+  document.querySelectorAll('.theme-option[data-theme]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === currentTheme);
+  });
+  const customOpt = document.getElementById('theme-custom-option');
+  const isCustom = currentTheme.startsWith('custom:');
+  customOpt.classList.toggle('active', isCustom);
+  customOpt.querySelector('.theme-option-check').innerHTML = isCustom ? themeCheck : '';
+  if (isCustom) {
+    customOpt.querySelector('.theme-option-name').textContent = '自定义 ' + currentTheme.slice(7).toUpperCase();
+  } else {
+    customOpt.querySelector('.theme-option-name').textContent = '自定义颜色';
+  }
+}
+
+// ===== INIT =====
+buildThemePicker();
+setTheme(currentTheme);
+document.getElementById('main-content').style.marginLeft = 'var(--w-sidebar)';
+showScreen('result'); // Start on result screen to show the most complex layout
+</script>
+</body>
+</html>

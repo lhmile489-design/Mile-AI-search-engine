@@ -1,3 +1,4 @@
+import { Check, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatMs } from "@/lib/format";
 import type { StepName } from "@/types";
@@ -21,9 +22,10 @@ const STATUS_TEXT: Readonly<Record<StepStatus, string>> = {
   failed: "失败",
 };
 
+// 24px 圆形节点：待处理 = 下沉灰 + 灰边；进行中 = 强调色 + 光晕；完成 = 绿；失败 = 红
 const DOT: Readonly<Record<StepStatus, string>> = {
-  idle: "bg-ink-muted",
-  running: "bg-accent shadow-focus-soft",
+  idle: "border-2 border-track-off bg-surface-sunk",
+  running: "bg-accent node-glow",
   done: "bg-success",
   failed: "bg-danger",
 };
@@ -89,12 +91,12 @@ export function HeronStepper({ steps, rewrittenQueries }: HeronStepperProps) {
   // 全部已开始的阶段都命中缓存 = 缓存回放；只有个别阶段命中（子检索词缓存）则由阶段自己标注
   const replay = isReplayingCache(steps);
   return (
-    <section aria-label="检索进度" className="rounded-card bg-surface px-6 py-7 shadow-e2">
-      <div className="flex flex-wrap items-center gap-3">
-        <h2 className="font-display text-lg font-bold">检索进度</h2>
+    <section aria-label="检索进度" className="overflow-hidden rounded-card bg-surface shadow-e2">
+      <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-4">
+        <h2 className="font-display text-label font-bold uppercase tracking-tight">检索进度</h2>
         {replay ? <Badge>缓存命中</Badge> : null}
       </div>
-      <ol className="mt-6 ml-1">
+      <ol className="px-5 py-4">
         {STEP_ORDER.map((name, i) => {
           const step = steps[name];
           const summary = stepSummary(name, step);
@@ -103,12 +105,21 @@ export function HeronStepper({ steps, rewrittenQueries }: HeronStepperProps) {
             <li
               key={name}
               aria-current={step.status === "running" ? "step" : undefined}
-              className={cn("relative border-l-2 border-line pl-6", last ? "pb-0" : "pb-6")}
+              className={cn("relative pl-10", last ? "pb-1" : "pb-6")}
             >
+              {last ? null : (
+                <span aria-hidden="true" className="absolute bottom-0 left-3 top-7 w-0.5 -translate-x-1/2 bg-line" />
+              )}
               <span
                 aria-hidden="true"
-                className={cn("absolute -left-1.5 top-1.5 h-2.5 w-2.5 rounded-pill", DOT[step.status])}
-              />
+                className={cn(
+                  "absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-pill",
+                  DOT[step.status],
+                )}
+              >
+                {step.status === "done" ? <Check size={14} strokeWidth={3} className="text-accent-on" /> : null}
+                {step.status === "failed" ? <X size={14} strokeWidth={3} className="text-accent-on" /> : null}
+              </span>
               <div className="flex items-baseline justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-ui font-semibold text-ink">{LABELS[name]}</p>

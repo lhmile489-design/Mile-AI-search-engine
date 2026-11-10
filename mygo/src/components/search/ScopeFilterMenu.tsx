@@ -12,9 +12,11 @@ export type ScopeFilterMenuProps = Readonly<{
   scopes: ReadonlyArray<ConfigOption>;
   selected: ReadonlyArray<SourceCategory>;
   onChange: (next: ReadonlyArray<SourceCategory>) => void;
+  /** 菜单向上弹出：结果页底部输入栏使用，避免被面板底边裁掉 */
+  menuUp?: boolean;
 }>;
 
-export function ScopeFilterMenu({ scopes, selected, onChange }: ScopeFilterMenuProps) {
+export function ScopeFilterMenu({ scopes, selected, onChange, menuUp = false }: ScopeFilterMenuProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const count = selected.length;
@@ -57,25 +59,20 @@ export function ScopeFilterMenu({ scopes, selected, onChange }: ScopeFilterMenuP
         aria-label="信源范围过滤"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-accent-deep",
-          "transition-colors duration-fast hover:bg-accent-tint-hover",
-          open && "bg-accent-tint-hover",
-        )}
+        className={cn("mode-chip", count > 0 && "is-active")}
       >
-        <Plus size={20} aria-hidden="true" />
-        {count > 0 ? (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-pill bg-accent px-1 font-mono text-xs font-bold text-accent-on shadow-e1">
-            {count}
-          </span>
-        ) : null}
+        <Plus size={12} strokeWidth={2.5} aria-hidden="true" />
+        {count > 0 ? `范围 ${count}` : "范围"}
       </button>
 
       {open ? (
         <div
           role="menu"
           aria-label="信源范围"
-          className="absolute left-0 top-12 z-drawer w-64 rounded-card border border-line bg-surface p-2 shadow-e4"
+          className={cn(
+            "absolute left-0 z-drawer w-64 rounded-card border border-line bg-surface p-2 shadow-e4",
+            menuUp ? "bottom-full mb-2" : "top-full mt-2",
+          )}
         >
           <div className="flex items-center justify-between px-3 py-2">
             <p className="text-label font-semibold text-ink">信源范围</p>

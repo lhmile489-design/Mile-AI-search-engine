@@ -44,6 +44,7 @@ export default {
       card: 'var(--radius)', pill: 'var(--radius-pill)',
     },
     fontSize: {
+      '2xs': 'var(--text-2xs)',
       xs: 'var(--text-xs)', sm: 'var(--text-sm)', label: 'var(--text-label)',
       ui: 'var(--text-ui)', base: 'var(--text-base)', lg: 'var(--text-lg)',
       xl: 'var(--text-xl)', '2xl': 'var(--text-2xl)', display: 'var(--text-display)',
@@ -72,8 +73,17 @@ export default {
         12: 'var(--space-12)', 16: 'var(--space-16)', 20: 'var(--space-20)',
         // 历史侧边栏宽度（产品扩展令牌，M3 补映射，用于主内容区让位）
         sidebar: 'var(--w-sidebar)', 'sidebar-compact': 'var(--w-sidebar-compact)',
+        // 顶栏高度（对齐 UI 改版稿 52px）
+        topbar: 'var(--h-topbar)', tabstrip: 'var(--h-tabstrip)',
+        // 控件尺寸（对齐 UI 改版稿）
+        control: 'var(--size-control)', avatar: 'var(--size-avatar)',
+        'hero-icon': 'var(--size-hero-icon)', radar: 'var(--w-radar)',
+      },
+      gridTemplateColumns: {
+        pipeline: 'minmax(0, 1fr) var(--w-radar)',
       },
       maxWidth: {
+        hero: 'var(--w-hero)', 'hero-desc': 'var(--w-hero-desc)', crumb: 'var(--w-crumb)',
         container: 'var(--container)', command: 'var(--w-command)',
         pipeline: 'var(--w-pipeline)', workbench: 'var(--w-workbench)',
         measure: 'var(--measure)', lead: 'var(--measure-lead)',

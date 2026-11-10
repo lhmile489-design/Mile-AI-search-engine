@@ -1,7 +1,6 @@
 
 import type { RefObject } from "react";
-import { Search } from "lucide-react";
-import { Chip } from "@/components/ui/Chip";
+import logoUrl from "@/assets/appLogo.png";
 import { Superbar } from "@/components/search/Superbar";
 import type { AppConfig, FocusMode, SourceCategory } from "@/types";
 
@@ -27,7 +26,7 @@ export type CommandScreenProps = Readonly<{
 }>;
 
 function Kbd({ children }: Readonly<{ children: string }>) {
-  return <kbd className="rounded-xs bg-surface px-2 py-0.5 font-mono text-xs text-ink shadow-e1">{children}</kbd>;
+  return <kbd className="kbd">{children}</kbd>;
 }
 
 export function CommandScreen({
@@ -47,20 +46,19 @@ export function CommandScreen({
   onEngineChange,
 }: CommandScreenProps) {
   return (
-    <section aria-labelledby="brand-title" className="mx-auto w-full max-w-command px-5 pb-16 pt-12 md:pt-20">
-      <div className="flex items-center gap-4">
-        <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-accent text-accent-on shadow-e2">
-          <Search size={16} aria-hidden="true" />
-        </span>
-        <h1 id="brand-title" className="font-display text-display font-bold leading-display">
-          Mile AI Search
-        </h1>
-      </div>
-      <p className="mt-4 max-w-lead text-base text-ink-soft">
-        输入一个技术问题，得到带引用角标的研报。每个结论都能点回原文段落。
+    <section
+      aria-labelledby="brand-title"
+      className="command-screen mx-auto flex w-full max-w-hero flex-col items-center justify-center px-6 py-12 text-center"
+    >
+      <img src={logoUrl} alt="" className="mb-5 h-hero-icon w-hero-icon object-contain" />
+      <h1 id="brand-title" className="mb-4 font-display text-display font-bold leading-display tracking-tight">
+        Mile AI Search
+      </h1>
+      <p className="mx-auto max-w-hero-desc text-base text-ink-soft">
+        输入技术问题，得到带引用角标的研报。每个结论都能追溯到原文段落。
       </p>
 
-      <div className="mt-8">
+      <div className="mt-8 w-full text-left">
         <Superbar
           value={draft}
           onChange={onDraftChange}
@@ -87,21 +85,21 @@ export function CommandScreen({
       </div>
 
       {suggestions.length > 0 ? (
-        <div className="mt-6">
-          <h2 className="text-label font-semibold text-ink-soft">推荐问题</h2>
-          <ul className="mt-3 flex flex-wrap gap-3">
+        <div className="mt-6 w-full">
+          <h2 className="sr-only">推荐问题</h2>
+          <ul className="flex flex-wrap justify-center gap-3">
             {suggestions.map((text) => (
               <li key={text} className="max-w-full">
-                <Chip onClick={() => onSubmit(text)} className="max-w-full text-left">
+                <button type="button" onClick={() => onSubmit(text)} className="suggestion-chip text-left">
                   <span className="truncate">{text}</span>
-                </Chip>
+                </button>
               </li>
             ))}
           </ul>
         </div>
       ) : null}
 
-      <p className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-ink-soft">
+      <p className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-ink-faint">
         <span><Kbd>Enter</Kbd> 提交</span>
         <span><Kbd>Shift+Enter</Kbd> 换行</span>
         <span><Kbd>Ctrl+K</Kbd> 聚焦搜索框</span>

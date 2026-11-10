@@ -13,18 +13,17 @@ export type RelatedQuestionsProps = Readonly<{
 export function RelatedQuestions({ items, onSelect }: RelatedQuestionsProps) {
   if (items.length === 0) return null;
   return (
-    <section aria-label="相关追问" className="rounded-card bg-surface px-6 py-5 shadow-e2">
-      <h2 className="font-display text-lg font-bold text-ink">相关追问</h2>
-      <ul className="mt-3 grid gap-2">
-        {items.map((q) => (
+    <section aria-label="相关追问" className="mt-4">
+      <h3 className="msg-section-title">相关追问</h3>
+      <ul className="grid gap-2">
+        {items.map((q, i) => (
           <li key={q}>
-            <button
-              type="button"
-              onClick={() => onSelect(q)}
-              className="group flex w-full cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2.5 text-left text-ui font-semibold text-accent-deep transition-colors duration-fast hover:bg-accent-tint-hover"
-            >
-              <span className="min-w-0 break-words">{q}</span>
-              <ArrowRight size={16} aria-hidden="true" className="shrink-0 opacity-0 transition-opacity duration-fast group-hover:opacity-100" />
+            <button type="button" onClick={() => onSelect(q)} className="evidence-row group">
+              <span className="num-dot" aria-hidden="true">
+                {i + 1}
+              </span>
+              <span className="evidence-row-title min-w-0 flex-1">{q}</span>
+              <ArrowRight size={14} aria-hidden="true" className="mt-1 shrink-0 text-accent-deep opacity-0 transition-opacity duration-fast group-hover:opacity-100" />
             </button>
           </li>
         ))}

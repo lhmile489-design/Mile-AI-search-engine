@@ -1,5 +1,4 @@
 
-import { Badge } from "@/components/ui/Badge";
 import { CITATION_PATTERN } from "@/lib/citations";
 import type { Takeaway } from "@/types";
 
@@ -53,14 +52,14 @@ function TakeawayText({ text, maxCitation, onCite }: Readonly<{ text: string; ma
 export function TakeawayCard({ takeaways, maxCitation, onCite }: TakeawayCardProps) {
   if (!takeaways || takeaways.length === 0) return null;
   return (
-    <section aria-label="核心要点" className="rounded-card bg-surface px-6 py-5 shadow-e2">
-      <h2 className="font-display text-lg font-bold text-ink">核心要点</h2>
-      <ol className="mt-4 grid gap-3">
+    <section aria-label="核心要点" className="mb-4 border-b border-line pb-4">
+      <h3 className="msg-section-title">核心要点</h3>
+      <ol className="grid gap-3">
         {takeaways.map((item, i) => (
           <li key={i} className="flex items-start gap-3">
-            <Badge tone="soft" dot={false} className="mt-0.5 shrink-0">
+            <span className="num-dot" aria-hidden="true">
               {i + 1}
-            </Badge>
+            </span>
             <p className="min-w-0 text-ui leading-body text-ink-soft">
               <TakeawayText text={item.text} maxCitation={maxCitation} onCite={onCite} />
             </p>

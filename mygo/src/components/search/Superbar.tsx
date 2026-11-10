@@ -1,7 +1,6 @@
 
 import { useEffect, type KeyboardEvent, type RefObject } from "react";
-import { ArrowUp } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Send } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { MAX_QUERY_LENGTH, queryLength } from "@/store/useSearchController";
 import type { AppConfig, FocusMode, SourceCategory } from "@/types";
@@ -10,13 +9,16 @@ import { ScopeFilterMenu } from "./ScopeFilterMenu";
 
 // Superbar：DESIGN.md §6.2。多行输入，Enter 提交，Shift+Enter 换行。
 // 去首尾空白后 1-500 字符；超长要有提示，空问题时提交按钮停用。
+// 两种形态对齐 docs/ui-redesign-preview.html：
+//   默认  = 首屏 .command-superbar（无聚焦光环，底部下沉栏放模式 chip 与引擎）
+//   compact = 结果页底部 .input-bar（下沉输入行 + 34px 发送按钮，下方一行模式 chip 与快捷键提示）
 
 export type SuperbarProps = Readonly<{
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
   inputRef: RefObject<HTMLTextAreaElement | null>;
-  /** 紧凑样式：结果页顶部使用，海拔降为 elevation-2 */
+  /** 结果页底部输入栏形态 */
   compact?: boolean;
   autoFocus?: boolean;
   label?: string;
@@ -56,6 +58,7 @@ export function Superbar({
   const tooLong = length > MAX_QUERY_LENGTH;
   const blocked = blockedReason !== null;
   const canSubmit = length >= 1 && !tooLong && !blocked;
+  const hasError = tooLong || blocked;
 
   // 自动增高：先清掉旧高度再按 scrollHeight 设置
   useEffect(() => {
@@ -77,62 +80,102 @@ export function Superbar({
     if (canSubmit) onSubmit();
   };
 
-  return (
-    <form
+  const message = blocked
+    ? blockedReason
+    : tooLong
+      ? `问题最多 ${MAX_QUERY_LENGTH} 个字符，当前 ${length} 个，请精简后再提交`
+      : null;
+
+  const scope =
+    config && onScopeFiltersChange ? (
+      <ScopeFilterMenu scopes={config.scopes} selected={scopeFilters} onChange={onScopeFiltersChange} menuUp={compact} />
+    ) : null;
+  const modes =
+    config && onFocusModeChange ? (
+      <FocusModePicker focusModes={config.focusModes} value={focusMode} onChange={onFocusModeChange} />
+    ) : null;
+  const engines =
+    config && onEngineChange ? <EnginePicker engines={config.engines} value={engine} onChange={onEngineChange} /> : null;
+
+  const textarea = (
+    <textarea
+      ref={inputRef}
+      value={value}
+      rows={compact ? 1 : 2}
+      aria-label={label}
+      aria-invalid={tooLong}
+      aria-describedby="superbar-limit"
+      placeholder={placeholder}
+      onChange={(event) => onChange(event.target.value)}
+      onKeyDown={handleKeyDown}
       className={cn(
-        "rounded-card bg-surface p-4 focus-within:shadow-focus-soft",
-        compact ? "shadow-e2" : "shadow-e3",
+        "w-full flex-1 resize-none bg-transparent font-body leading-normal text-ink placeholder:text-ink-faint focus:outline-none focus-visible:outline-none",
+        compact ? "max-h-32 py-1 text-ui" : "max-h-48 min-h-16 text-base",
       )}
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (canSubmit) onSubmit();
-      }}
-    >
-      <textarea
-        ref={inputRef}
-        value={value}
-        rows={compact ? 1 : 2}
-        aria-label={label}
-        aria-invalid={tooLong}
-        aria-describedby={tooLong ? "superbar-limit" : undefined}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
-        onKeyDown={handleKeyDown}
-        className="max-h-48 w-full resize-none bg-transparent px-1 py-1 font-body text-base text-ink placeholder:text-ink-faint focus:outline-none"
-      />
-      <div className={cn("flex items-center justify-between gap-3", compact ? "mt-1" : "mt-2")}>
+    />
+  );
+
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (canSubmit) onSubmit();
+  };
+
+  if (compact) {
+    return (
+      <form className="w-full" onSubmit={submit}>
+        <div className="input-row">
+          {textarea}
+          <button type="submit" disabled={!canSubmit} aria-label="提交检索" className="input-send-btn">
+            <Send size={15} strokeWidth={2.5} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="input-bar-meta">
+          {scope}
+          {modes}
+          <p
+            id="superbar-limit"
+            role={hasError ? "alert" : undefined}
+            className={cn("ml-auto text-xs", hasError ? "font-semibold text-danger" : "text-ink-faint")}
+          >
+            {message ?? (
+              <>
+                <kbd className="kbd">Enter</kbd> 发送 <kbd className="kbd ml-2">Shift+Enter</kbd> 换行
+              </>
+            )}
+          </p>
+          {engines}
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <form className="command-superbar" onSubmit={submit}>
+      <div className="flex items-end gap-3 px-5 py-4">
+        {textarea}
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          aria-label="提交检索"
+          className="inline-flex h-11 flex-shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-md bg-accent px-5 text-ui font-semibold text-accent-on shadow-accent-rest transition duration-fast hover:-translate-y-0.5 hover:shadow-accent-hover active:translate-y-0 active:shadow-accent-press disabled:cursor-not-allowed disabled:translate-y-0 disabled:bg-disabled disabled:text-ink-faint disabled:shadow-none"
+        >
+          <Send size={16} aria-hidden="true" />
+          检索
+        </button>
+      </div>
+      <div className="command-superbar-footer">
+        {scope}
+        {modes}
+        <span className="flex-1" />
         <p
           id="superbar-limit"
-          className={cn(
-            "text-sm",
-            tooLong || blocked ? "font-semibold text-danger" : "text-ink-muted",
-            compact && !tooLong && !blocked && "sr-only",
-          )}
-          role={tooLong || blocked ? "alert" : undefined}
+          role={hasError ? "alert" : undefined}
+          className={cn("text-xs", hasError ? "font-semibold text-danger" : "sr-only")}
         >
-          {blocked
-            ? blockedReason
-            : tooLong
-              ? `问题最多 ${MAX_QUERY_LENGTH} 个字符，当前 ${length} 个，请精简后再提交`
-              : "Enter 提交，Shift+Enter 换行"}
+          {message ?? "Enter 提交，Shift+Enter 换行"}
         </p>
-        <Button type="submit" icon={ArrowUp} disabled={!canSubmit} aria-label="提交检索" className={compact ? "ml-auto" : undefined} />
+        {engines}
       </div>
-      {config ? (
-        <div className="mt-2 flex items-center justify-between gap-2 border-t border-line pt-2">
-          <div className="flex min-w-0 items-center gap-1">
-            {onScopeFiltersChange ? (
-              <ScopeFilterMenu scopes={config.scopes} selected={scopeFilters} onChange={onScopeFiltersChange} />
-            ) : null}
-            {onFocusModeChange ? (
-              <FocusModePicker focusModes={config.focusModes} value={focusMode} onChange={onFocusModeChange} />
-            ) : null}
-          </div>
-          {onEngineChange ? (
-            <EnginePicker engines={config.engines} value={engine} onChange={onEngineChange} />
-          ) : null}
-        </div>
-      ) : null}
     </form>
   );
 }

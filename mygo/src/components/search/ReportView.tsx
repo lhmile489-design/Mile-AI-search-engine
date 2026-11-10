@@ -52,7 +52,7 @@ export function ReportView({ report, generating, aborted, maxCitation, activeCit
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest("button,a")) onClear?.();
       }}
-      className="rounded-card bg-surface px-6 py-7 shadow-e2">
+      className="min-w-0">
       {aborted ? (
         <p
           role="status"

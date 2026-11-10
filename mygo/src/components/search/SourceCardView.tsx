@@ -1,16 +1,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronDown, ChevronUp, Copy, FileText } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 import { splitPassage, type Range } from "@/lib/highlight";
 import type { SourceCard } from "@/types";
-import { CategoryTag } from "./CategoryTag";
 import { Favicon } from "./Favicon";
 
-// 信源卡片（证据抽屉里的一行）。契约 §4.1：
+// 信源卡片：对齐 UI 改版稿 .source-card。契约 §4.1：
 // passage 为 null 时只高亮卡片；done / 快照里有 highlight 时，在 passage 内高亮被引用的句子。
-// 抽屉是 elevation-3 面板，里面不再放 elevation-2 卡片（DESIGN.md §3.2），用分隔线分组。
+// 激活态 = 强调色描边，不用左侧竖条。分数条只在 scores.final 有值时显示（决策 D4）。
 
 export type SourceCardViewProps = Readonly<{
   source: SourceCard;
@@ -29,6 +27,7 @@ export function SourceCardView({ source, ranges, active, activeNonce, categoryLa
   const [bibState, setBibState] = useState<"idle" | "copied" | "failed">("idle");
   const date = formatDate(source.publishedAt);
   const passage = source.passage;
+  const finalScore = source.scores.final;
 
   // F13：仅 preprint 给「复制 BibTeX」；bibtex 为 null 时按钮停用并说明。
   const isPreprint = source.category === "preprint";
@@ -79,75 +78,31 @@ export function SourceCardView({ source, ranges, active, activeNonce, categoryLa
         if (source.index === null || (e.target as HTMLElement).closest("a,button")) return;
         onFocus(source.index);
       }}
-      className={cn(
-        "border-t border-line px-6 py-5 first:border-t-0",
-        active ? "source-active bg-accent-soft" : "bg-surface",
-      )}
+      className="source-card"
     >
-      <div className="flex items-start gap-3">
+      <div className="source-card-header">
         <button
           type="button"
           aria-label={`高亮正文中引用第 ${source.index} 个信源的角标`}
           aria-pressed={active}
           disabled={source.index === null}
           onClick={() => source.index !== null && onFocus(source.index)}
-          className="mt-0.5 inline-flex min-w-6 shrink-0 cursor-pointer justify-center rounded-xs bg-accent-soft px-1 text-xs font-bold leading-6 text-accent-soft-ink hover:bg-accent-tint-press"
+          className="source-index"
         >
           {source.index}
         </button>
-        <div className="min-w-0 flex-1">
-          <a
-            href={source.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="break-words text-ui font-semibold text-accent-deep underline"
-          >
-            {source.title}
-          </a>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <Favicon url={source.faviconUrl} />
-            <span className="font-mono text-sm text-ink-soft">{source.domain}</span>
-            <CategoryTag label={categoryLabel(source.category)} />
-            {date ? <span className="font-mono text-sm tabular-nums text-ink-soft">{date}</span> : null}
-            {isPreprint ? (
-              <button
-                type="button"
-                onClick={copyBibtex}
-                disabled={!bibtex}
-                title={bibtex ? "复制 BibTeX 引用" : "该信源未提供 BibTeX"}
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-pill px-2 py-0.5 text-label font-semibold",
-                  bibtex
-                    ? "cursor-pointer bg-accent-soft text-accent-soft-ink hover:bg-accent-tint-press"
-                    : "cursor-not-allowed bg-surface-sunk text-ink-faint",
-                )}
-              >
-                {bibState === "copied" ? (
-                  <Check size={13} aria-hidden="true" />
-                ) : bibState === "failed" ? (
-                  <FileText size={13} aria-hidden="true" />
-                ) : (
-                  <Copy size={13} aria-hidden="true" />
-                )}
-                {bibState === "copied" ? "已复制" : bibState === "failed" ? "复制失败" : "复制 BibTeX"}
-                {!bibtex ? "（未提供）" : ""}
-              </button>
-            ) : null}
-            {bibState === "failed" ? (
-              <span role="status" className="text-label text-danger">无法访问剪贴板，请手动复制</span>
-            ) : null}
-          </div>
-        </div>
+        <Favicon url={source.faviconUrl} />
+        <span className="source-domain" title={source.domain}>{source.domain}</span>
+        <span className="source-category-badge">{categoryLabel(source.category)}</span>
       </div>
 
+      <a href={source.url} target="_blank" rel="noopener noreferrer" className="source-title">
+        {source.title}
+      </a>
+
       {passage && segments ? (
-        <div className="mt-3">
-          <p
-            className={cn(
-              "whitespace-pre-wrap break-words text-sm leading-body text-ink-soft",
-              expanded ? "" : "line-clamp-4",
-            )}
-          >
+        <>
+          <p className={expanded ? "source-snippet" : "source-snippet line-clamp-3"}>
             {segments.map((segment, i) =>
               segment.marked ? (
                 <mark key={i} className="evidence-mark">
@@ -158,20 +113,60 @@ export function SourceCardView({ source, ranges, active, activeNonce, categoryLa
               ),
             )}
           </p>
+        </>
+      ) : (
+        <p className="source-snippet text-ink-muted">该信源没有可展示的原文片段。</p>
+      )}
+
+      {finalScore !== null ? (
+        <div className="source-score-row" title="综合分（相关度、权威度、时效性加权）">
+          <span className="source-score-bar" aria-hidden="true">
+            <span
+              className="source-score-fill block"
+              style={{ width: `${Math.round(Math.min(Math.max(finalScore, 0), 1) * 100)}%` }}
+            />
+          </span>
+          <span className="source-score-num">{finalScore.toFixed(2)}</span>
+        </div>
+      ) : null}
+
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+        {date ? <span className="font-mono text-xs tabular-nums text-ink-faint">{date}</span> : null}
+        {passage && segments ? (
           <button
             type="button"
             aria-expanded={expanded}
             onClick={() => setExpanded((value) => !value)}
-            className="mt-2 inline-flex cursor-pointer items-center gap-1 text-sm font-semibold text-accent-deep"
+            className="source-link-btn"
           >
-            {expanded ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
+            {expanded ? <ChevronUp size={13} aria-hidden="true" /> : <ChevronDown size={13} aria-hidden="true" />}
             {expanded ? "收起原文片段" : "展开原文片段"}
             {hasMark && !expanded ? "（含高亮句子）" : ""}
           </button>
-        </div>
-      ) : (
-        <p className="mt-3 text-sm text-ink-muted">该信源没有可展示的原文片段。</p>
-      )}
+        ) : null}
+        {isPreprint ? (
+          <button
+            type="button"
+            onClick={copyBibtex}
+            disabled={!bibtex}
+            title={bibtex ? "复制 BibTeX 引用" : "该信源未提供 BibTeX"}
+            className="source-link-btn"
+          >
+            {bibState === "copied" ? (
+              <Check size={13} aria-hidden="true" />
+            ) : bibState === "failed" ? (
+              <FileText size={13} aria-hidden="true" />
+            ) : (
+              <Copy size={13} aria-hidden="true" />
+            )}
+            {bibState === "copied" ? "已复制" : bibState === "failed" ? "复制失败" : "复制 BibTeX"}
+            {!bibtex ? "（未提供）" : ""}
+          </button>
+        ) : null}
+        {bibState === "failed" ? (
+          <span role="status" className="text-xs text-danger">无法访问剪贴板，请手动复制</span>
+        ) : null}
+      </div>
     </li>
   );
 }

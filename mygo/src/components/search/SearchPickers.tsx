@@ -18,7 +18,7 @@ export type FocusModePickerProps = Readonly<{
 export function FocusModePicker({ focusModes, value, onChange }: FocusModePickerProps) {
   if (focusModes.length === 0) return null;
   return (
-    <div role="radiogroup" aria-label="检索模式" className="flex items-center gap-1">
+    <div role="radiogroup" aria-label="检索模式" className="flex flex-wrap items-center gap-2">
       {focusModes.map((mode) => {
         const active = mode.value === value;
         return (
@@ -29,12 +29,7 @@ export function FocusModePicker({ focusModes, value, onChange }: FocusModePicker
             aria-checked={active}
             title={mode.description}
             onClick={() => onChange(mode.value as FocusMode)}
-            className={cn(
-              "cursor-pointer rounded-pill px-3 py-1 text-label font-semibold transition-colors duration-fast",
-              active
-                ? "bg-accent-soft text-accent-soft-ink shadow-e1"
-                : "text-ink-muted hover:text-ink",
-            )}
+            className="mode-chip"
           >
             {mode.label}
           </button>
@@ -88,10 +83,10 @@ export function EnginePicker({ engines, value, onChange }: EnginePickerProps) {
         disabled={engines.length <= 1}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "inline-flex cursor-pointer items-center gap-1 rounded-pill px-3 py-1 text-label font-semibold",
+          "inline-flex items-center gap-1 rounded-pill px-2 py-0.5 text-xs text-ink-faint",
           engines.length > 1
-            ? "text-ink-soft transition-colors duration-fast hover:bg-accent-tint-hover hover:text-ink"
-            : "cursor-default text-ink-muted",
+            ? "cursor-pointer transition-colors duration-fast hover:bg-accent-tint-hover hover:text-ink"
+            : "cursor-default",
         )}
       >
         {current.label}

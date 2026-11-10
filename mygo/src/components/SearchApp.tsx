@@ -98,7 +98,13 @@ export function SearchApp() {
 
   return (
     <div className="min-h-screen">
-      <TopBar sidebarOpen={sidebarOpen} onToggleSidebar={toggleSidebar} onHome={controller.newSearch} />
+      <TopBar
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={toggleSidebar}
+        onHome={controller.newSearch}
+        onOpenSettings={openSettings}
+        crumb={state.phase === "initial" ? null : state.query}
+      />
       <HistorySidebar
         open={sidebarOpen}
         onToggle={toggleSidebar}
@@ -110,7 +116,7 @@ export function SearchApp() {
       {state.error ? (
         <ErrorBanner error={state.error} onRetry={handleRetry} onDismiss={() => dispatch({ type: "DISMISS_ERROR" })} />
       ) : null}
-      <main className={cn(sidebarOpen ? "lg:pl-sidebar" : "lg:pl-sidebar-compact")}>
+      <main className={cn("pt-topbar", sidebarOpen ? "lg:pl-sidebar" : "lg:pl-sidebar-compact")}>
         {state.phase === "initial" ? (
           <ErrorBoundary screen="首屏" onReset={controller.newSearch}>
             <CommandScreen

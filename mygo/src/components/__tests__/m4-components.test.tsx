@@ -98,12 +98,12 @@ describe("Superbar：没有可用引擎时停用提交", () => {
 
   it("blockedReason 有值：提交按钮 disabled，并显示原因", () => {
     const html = render("没有可用的检索引擎，请检查后端密钥配置");
-    expect(html).toMatch(/<button[^>]*disabled[^>]*aria-label="提交检索"|<button[^>]*aria-label="提交检索"[^>]*disabled/);
+    expect(html).toMatch(/<button[^>]*\sdisabled=""[^>]*aria-label="提交检索"|<button[^>]*aria-label="提交检索"[^>]*\sdisabled=""/);
     expect(html).toContain("没有可用的检索引擎，请检查后端密钥配置");
   });
 
   it("没有 blockedReason 且有内容：提交按钮可用", () => {
     const html = render(null);
-    expect(html).not.toMatch(/<button[^>]*disabled/);
+    expect(html).not.toMatch(/<button[^>]*\sdisabled=""/);
   });
 });
