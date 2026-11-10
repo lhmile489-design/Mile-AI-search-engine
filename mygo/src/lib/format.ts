@@ -1,7 +1,12 @@
 const NUMBER = new Intl.NumberFormat("en-US");
 
-/** 数字带单位：1,284 ms（PRODUCT.md §8） */
+/**
+ * 数字带单位：1,284 ms（PRODUCT.md §8）。
+ * 后端按整毫秒下发，缓存回放常测得 0；0 表示实测不足 1 ms，不是没有测量，
+ * 所以显示「小于 1 ms」，不改写测量值。
+ */
 export function formatMs(ms: number): string {
+  if (ms < 1) return "小于 1 ms";
   return `${NUMBER.format(ms)} ms`;
 }
 
