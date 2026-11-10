@@ -34,7 +34,7 @@
 | Bun | 1.3.13 |
 | 前端 | Vite + TypeScript + React（G1 任务 7 接入） |
 | SQLite | 优先 `modernc.org/sqlite`（纯 Go），G1 实测 |
-| 应用标识符 | 暂用 `com.example.mileaisearch`，等主调度给真实值，G5 前必须定 |
+| 应用标识符 | `com.lhmile.mileaisearch`（G5 定稿） |
 
 ## 4. 目录约定
 

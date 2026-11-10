@@ -176,7 +176,7 @@ func BuildConfig(cfg config.Config) contract.AppConfig {
 	if cfg.LLMAPIKey.Set() {
 		engines = append(engines, contract.EngineOption{Value: "deepseek", Label: "DeepSeek", Available: true})
 	}
-	return contract.AppConfig{FocusModes: focusModes, Engines: engines, Scopes: scopes, Version: "0.1.0"}
+	return contract.AppConfig{FocusModes: focusModes, Engines: engines, Scopes: scopes, Version: "1.0.0"}
 }
 
 // GetConfig returns focusModes/engines/scopes/version (§13.5).
