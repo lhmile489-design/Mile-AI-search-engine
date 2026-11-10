@@ -4,7 +4,10 @@ package service
 
 import (
 	"context"
+	"log"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/egoist/mygo"
 
@@ -84,9 +87,22 @@ func (SearchService) Search(ctx context.Context, req contract.SearchRequest, ch 
 	}
 	defer release()
 
+	// Diagnostics: prove that no outbound request starts after cancellation.
+	var startedAtCancel atomic.Int64
+	stop := context.AfterFunc(rctx, func() {
+		s, _, _, _ := httpStats.Snapshot()
+		startedAtCancel.Store(s)
+		log.Printf("取消诊断: 取消瞬间 started=%d", s)
+	})
+	defer stop()
+
 	deps := NewDeps(config.Load())
 	err := pipeline.Run(rctx, deps, req, func(f contract.StreamFrame) error { return ch.Send(f) })
 	if rctx.Err() != nil {
+		time.AfterFunc(3*time.Second, func() {
+			s, d, c, fl := httpStats.Snapshot()
+			log.Printf("取消诊断: 取消后 3 秒 started=%d done=%d canceled=%d failed=%d, 增量=%d", s, d, c, fl, s-startedAtCancel.Load())
+		})
 		return nil // client went away; nothing left to report
 	}
 	return err
