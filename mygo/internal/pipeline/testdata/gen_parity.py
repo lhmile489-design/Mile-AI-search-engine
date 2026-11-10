@@ -107,6 +107,38 @@ CITATION_CASES = [
         "report": "[1] leading marker. Tail [2]",
         "sources": [(1, "a.com", "leading marker text."), (2, "b.com", "Tail text here.")],
     },
+    {
+        "name": "consensus_all_supported",
+        "report": "Alpha claim holds [1][2]. Beta claim holds [2][3].",
+        "sources": [
+            (1, "a.com", "Alpha claim holds."),
+            (2, "b.com", "Alpha and Beta claims hold."),
+            (3, "c.com", "Beta claim holds."),
+        ],
+    },
+    {
+        "name": "consensus_same_domain_twice",
+        "report": "Gamma claim holds [1][2]. Delta claim holds [3].",
+        "sources": [
+            (1, "a.com", "Gamma claim holds."),
+            (2, "a.com", "Gamma claim also holds."),
+            (3, "b.com", "Delta claim holds."),
+        ],
+    },
+    {
+        "name": "consensus_one_third_rounding",
+        "report": "One claim [1][2]. Two claim [3]. Three claim [3].",
+        "sources": [
+            (1, "a.com", "One claim."),
+            (2, "b.com", "One claim again."),
+            (3, "c.com", "Two claim. Three claim."),
+        ],
+    },
+    {
+        "name": "consensus_empty_report",
+        "report": "",
+        "sources": [(1, "a.com", "Anything at all.")],
+    },
 ]
 
 

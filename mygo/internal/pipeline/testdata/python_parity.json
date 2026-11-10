@@ -419,6 +419,257 @@
     "supportedSentences": 0,
     "citedSentences": 2
    }
+  },
+  {
+   "name": "consensus_all_supported",
+   "highlightTexts": [
+    "Alpha claim holds.",
+    "Alpha and Beta claims hold.",
+    "Alpha and Beta claims hold.",
+    "Beta claim holds."
+   ],
+   "report": "Alpha claim holds [1][2]. Beta claim holds [2][3].",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "a.com",
+     "passage": "Alpha claim holds."
+    },
+    {
+     "index": 2,
+     "domain": "b.com",
+     "passage": "Alpha and Beta claims hold."
+    },
+    {
+     "index": 3,
+     "domain": "c.com",
+     "passage": "Beta claim holds."
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 18,
+     "markerEnd": 21,
+     "sentenceStart": 0,
+     "sentenceEnd": 25,
+     "highlight": {
+      "start": 0,
+      "end": 18,
+      "score": 0.6
+     }
+    },
+    {
+     "index": 2,
+     "markerStart": 21,
+     "markerEnd": 24,
+     "sentenceStart": 0,
+     "sentenceEnd": 25,
+     "highlight": {
+      "start": 0,
+      "end": 27,
+      "score": 0.2
+     }
+    },
+    {
+     "index": 2,
+     "markerStart": 43,
+     "markerEnd": 46,
+     "sentenceStart": 26,
+     "sentenceEnd": 50,
+     "highlight": {
+      "start": 0,
+      "end": 27,
+      "score": 0.2
+     }
+    },
+    {
+     "index": 3,
+     "markerStart": 46,
+     "markerEnd": 49,
+     "sentenceStart": 26,
+     "sentenceEnd": 50,
+     "highlight": {
+      "start": 0,
+      "end": 17,
+      "score": 0.6
+     }
+    }
+   ],
+   "hallucinated": [],
+   "consensus": {
+    "score": 1.0,
+    "supportedSentences": 2,
+    "citedSentences": 2
+   }
+  },
+  {
+   "name": "consensus_same_domain_twice",
+   "highlightTexts": [
+    "Gamma claim holds.",
+    "Gamma claim also holds.",
+    "Delta claim holds."
+   ],
+   "report": "Gamma claim holds [1][2]. Delta claim holds [3].",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "a.com",
+     "passage": "Gamma claim holds."
+    },
+    {
+     "index": 2,
+     "domain": "a.com",
+     "passage": "Gamma claim also holds."
+    },
+    {
+     "index": 3,
+     "domain": "b.com",
+     "passage": "Delta claim holds."
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 18,
+     "markerEnd": 21,
+     "sentenceStart": 0,
+     "sentenceEnd": 25,
+     "highlight": {
+      "start": 0,
+      "end": 18,
+      "score": 0.6
+     }
+    },
+    {
+     "index": 2,
+     "markerStart": 21,
+     "markerEnd": 24,
+     "sentenceStart": 0,
+     "sentenceEnd": 25,
+     "highlight": {
+      "start": 0,
+      "end": 23,
+      "score": 0.6
+     }
+    },
+    {
+     "index": 3,
+     "markerStart": 44,
+     "markerEnd": 47,
+     "sentenceStart": 26,
+     "sentenceEnd": 48,
+     "highlight": {
+      "start": 0,
+      "end": 18,
+      "score": 0.75
+     }
+    }
+   ],
+   "hallucinated": [],
+   "consensus": {
+    "score": 0.0,
+    "supportedSentences": 0,
+    "citedSentences": 2
+   }
+  },
+  {
+   "name": "consensus_one_third_rounding",
+   "highlightTexts": [
+    "One claim.",
+    "One claim again.",
+    "Two claim.",
+    "Three claim."
+   ],
+   "report": "One claim [1][2]. Two claim [3]. Three claim [3].",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "a.com",
+     "passage": "One claim."
+    },
+    {
+     "index": 2,
+     "domain": "b.com",
+     "passage": "One claim again."
+    },
+    {
+     "index": 3,
+     "domain": "c.com",
+     "passage": "Two claim. Three claim."
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 10,
+     "markerEnd": 13,
+     "sentenceStart": 0,
+     "sentenceEnd": 17,
+     "highlight": {
+      "start": 0,
+      "end": 10,
+      "score": 0.5
+     }
+    },
+    {
+     "index": 2,
+     "markerStart": 13,
+     "markerEnd": 16,
+     "sentenceStart": 0,
+     "sentenceEnd": 17,
+     "highlight": {
+      "start": 0,
+      "end": 16,
+      "score": 0.5
+     }
+    },
+    {
+     "index": 3,
+     "markerStart": 28,
+     "markerEnd": 31,
+     "sentenceStart": 18,
+     "sentenceEnd": 32,
+     "highlight": {
+      "start": 0,
+      "end": 10,
+      "score": 0.6667
+     }
+    },
+    {
+     "index": 3,
+     "markerStart": 45,
+     "markerEnd": 48,
+     "sentenceStart": 33,
+     "sentenceEnd": 49,
+     "highlight": {
+      "start": 11,
+      "end": 23,
+      "score": 0.6667
+     }
+    }
+   ],
+   "hallucinated": [],
+   "consensus": {
+    "score": 0.3333,
+    "supportedSentences": 1,
+    "citedSentences": 3
+   }
+  },
+  {
+   "name": "consensus_empty_report",
+   "highlightTexts": [],
+   "report": "",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "a.com",
+     "passage": "Anything at all."
+    }
+   ],
+   "citations": [],
+   "hallucinated": [],
+   "consensus": null
   }
  ],
  "bibtex": [
