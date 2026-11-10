@@ -10,9 +10,9 @@ export default defineConfig({
   },
   server: {
     // The app loads this address during `mygo dev` (devUrl in mygo.config.ts).
-    // 与 mygo.config.ts devUrl 保持一致；G2 验收时 5173 被 szpu-takeout-admin 占用，
-    // 验证改用 5199 完成，提交恢复契约值。复验时被占可同样临时改这里和 devUrl。
-    port: 5173,
+    // 与 mygo.config.ts devUrl 保持一致。5173 常被本机其他项目占用，G3a 起统一用 5317。
+    // 改端口时这里和 devUrl 必须同时改，strictPort 保证占用时直接报错而不是悄悄换端口。
+    port: 5317,
     strictPort: true,
     watch: { ignored: ["**/.mygo/**", "**/build/**"] },
   },

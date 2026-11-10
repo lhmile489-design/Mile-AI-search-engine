@@ -314,40 +314,41 @@ export const Greeter = {
 
 /** SearchService is the page-facing search + history + config surface. */
 export const SearchService = {
-  /** Cancel aborts the in-flight run identified by runId. Stub. */
+  /**
+   * Cancel aborts in-flight runs. The request carries no run id, so "" or "all"
+   * cancels every run; a numeric id cancels that run only.
+   */
   cancel(runId: string): Promise<void> {
     return call("SearchService.Cancel", runId);
   },
-  /** DeleteHistory removes one record (§13.4). Stub. */
+  /** DeleteHistory removes one record (§13.4). G3b. */
   deleteHistory(id: string): Promise<void> {
     return call("SearchService.DeleteHistory", id);
   },
-  /** GetConfig returns focusModes/engines/scopes/version (§13.5). Stub. */
+  /** GetConfig returns focusModes/engines/scopes/version (§13.5). */
   getConfig(): Promise<AppConfig> {
     return call("SearchService.GetConfig");
   },
-  /** GetHistory returns one full snapshot (§13.3). Stub. */
+  /** GetHistory returns one full snapshot (§13.3). G3b. */
   getHistory(id: string): Promise<HistoryDetail> {
     return call("SearchService.GetHistory", id);
   },
-  /** GetSuggestions returns first-screen recommended questions (§13.6). Stub. */
+  /** GetSuggestions returns first-screen recommended questions (§13.6). */
   getSuggestions(): Promise<SuggestionsData> {
     return call("SearchService.GetSuggestions");
   },
-  /** ListHistory returns paged history cards (§13.2). Stub. */
+  /** ListHistory returns paged history cards (§13.2). G3b. */
   listHistory(page: number, pageSize: number, q: string): Promise<HistoryList> {
     return call("SearchService.ListHistory", page, pageSize, q);
   },
-  /**
-   * SaveSettings writes LLM/Tavily keys for the first-run settings page
-   * (PRODUCT §8). Write-only — keys are never returned by GetConfig. Stub.
-   */
+  /** SaveSettings writes LLM/Tavily keys (PRODUCT §8). Write-only. G3b. */
   saveSettings(s: Settings): Promise<void> {
     return call("SearchService.SaveSettings", s);
   },
   /**
-   * Search streams StreamFrames for one request over ch (PRD §4.2). Stub: the
-   * error rejects the page's call, which the transport maps to the error state.
+   * Search streams StreamFrames for one request over ch. The call's ctx is
+   * canceled when the page closes the Channel or the window goes away, and every
+   * outbound request derives from it.
    */
   search(req: SearchRequest, ch: Channel<StreamFrame>): Promise<void> {
     return call("SearchService.Search", req, ch);
