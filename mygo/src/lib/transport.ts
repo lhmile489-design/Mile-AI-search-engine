@@ -116,8 +116,9 @@ function frameToEvent(frame: StreamFrame): SseEvent | null {
 }
 
 // Go 侧 SearchService 的 search 契约：参数与前端 SearchRequest 一致。
-function toGoRequest(request: SearchRequest) {
+function toGoRequest(request: SearchRequest, runId: string) {
   return {
+    runId,
     query: request.query,
     focusMode: request.focusMode,
     engine: request.engine,
@@ -133,6 +134,8 @@ export const openMyGoStream: OpenStream = (request, handlers, options = {}) => {
   let dead = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const channel = new Channel<StreamFrame>();
+  // runId 在调用 search 之前由页面生成，Go 侧按它登记，abort 时按它精确取消。
+  const runId = crypto.randomUUID();
 
   const stop = () => {
     dead = true;
@@ -169,7 +172,7 @@ export const openMyGoStream: OpenStream = (request, handlers, options = {}) => {
     // 先发出调用，再 for await 消费帧。done 是方法返回的 promise：
     //   - 正常完成 = 流结束；reject = Go 侧出错（G3 前是「未实现」）。
     //   - 提前 settled 存进 result 引用，任何 early-return 路径也不会留下 unhandled rejection。
-    const done = SearchService.search(toGoRequest(request), channel);
+    const done = SearchService.search(toGoRequest(request, runId), channel);
     let settled: { ok: boolean; error?: unknown } | null = null;
     void Promise.resolve(done)
       .then(() => { settled = { ok: true }; })
@@ -221,7 +224,14 @@ export const openMyGoStream: OpenStream = (request, handlers, options = {}) => {
     if (!terminal) handlers.onClose();
   })();
 
-  return { abort: stop };
+  return {
+    abort: () => {
+      const alreadyDead = dead;
+      stop();
+      // 只在流还活着时通知 Go 取消这一轮；已结束的流不需要。
+      if (!alreadyDead) void Promise.resolve(SearchService.cancel(runId)).catch(() => undefined);
+    },
+  };
 };
 
 // ---------------------------------------------------------------- SearchTransport：前端唯一的后端访问面

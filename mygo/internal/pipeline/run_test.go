@@ -36,16 +36,26 @@ func TestParseQueries(t *testing.T) {
 }
 
 // fakeLLM serves the non-stream rewrite call and the SSE report stream.
+// finalizeTestBody is what the fake LLM answers to the finalize call.
+const finalizeTestBody = `{"takeaways":[{"text":"a","citations":[1]},{"text":"b","citations":[2]},{"text":"c","citations":[1,2]}],"followUps":["q1","q2","q3"]}`
+
 func fakeLLM(t *testing.T, rewriteBody string, tokens []string) *httptest.Server {
 	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
-			Stream bool `json:"stream"`
+			Stream   bool `json:"stream"`
+			Messages []struct {
+				Content string `json:"content"`
+			} `json:"messages"`
 		}
 		_ = json.NewDecoder(r.Body).Decode(&req)
 		if !req.Stream {
+			body := rewriteBody
+			if len(req.Messages) > 0 && strings.Contains(req.Messages[0].Content, "takeaways") {
+				body = finalizeTestBody // the finalize call, not the rewrite call
+			}
 			_ = json.NewEncoder(w).Encode(map[string]any{
-				"choices": []any{map[string]any{"message": map[string]any{"content": rewriteBody}}},
+				"choices": []any{map[string]any{"message": map[string]any{"content": body}}},
 			})
 			return
 		}
@@ -130,7 +140,7 @@ func TestFrameOrder(t *testing.T) {
 	order := []string{
 		"rewriting:start", "rewriting:end", "searching:start", "sources:raw", "sources:raw",
 		"searching:end", "reasoning:start", "sources:ranked", "reasoning:end",
-		"generating:start", "token", "token", "generating:end", "done",
+		"generating:start", "token", "token", "generating:end", "related", "done",
 	}
 	if got != strings.Join(order, " ") {
 		t.Fatalf("frame order:\n got  %s\n want %s", got, strings.Join(order, " "))
@@ -139,8 +149,12 @@ func TestFrameOrder(t *testing.T) {
 	if last.SourceCount != 2 || last.CharCount != len("Hello world [1].") {
 		t.Fatalf("done: %+v", last)
 	}
-	if len(last.Citations) != 0 || len(last.Takeaways) != 0 {
-		t.Fatal("citations/takeaways must stay empty in G3a")
+	// The report cites source 1 once; the sentence has a single domain.
+	if len(last.Citations) != 1 || last.Citations[0].Index != 1 {
+		t.Fatalf("citations: %+v", last.Citations)
+	}
+	if last.Consensus == nil || last.Consensus.CitedSentences != 1 || last.Consensus.SupportedSentences != 0 {
+		t.Fatalf("consensus: %+v", last.Consensus)
 	}
 }
 

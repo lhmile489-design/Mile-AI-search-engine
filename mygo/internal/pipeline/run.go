@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -190,6 +191,12 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 	tg := time.Now()
 	trace("reasoning", "start", "开始分类重排", nil, nil)
 	ranked := RankSources(all, req.FocusMode, req.ScopeFilters, d.Cfg.RankingTopK, d.Now())
+	for i := range ranked {
+		if bib := GenerateBibtex(ranked[i].Category, ranked[i].Title, ranked[i].URL, deref(ranked[i].PublishedAt)); bib != "" {
+			b := bib
+			ranked[i].BibTeX = &b
+		}
+	}
 	emit(contract.StreamFrame{Type: "sources", Sources: &contract.SourcesPayload{
 		Phase: "ranked", Engine: req.Engine, Ranked: ranked,
 	}})
@@ -206,7 +213,9 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 	}
 	tgen := time.Now()
 	trace("generating", "start", "开始生成研报", nil, map[string]any{"model": d.Cfg.LLMModel, "sourceCount": len(ranked)})
+	var report strings.Builder
 	res, err := Generate(ctx, d.LLM, d.Cfg.Timeouts.GenerateFirstTk, req.Query, ranked, func(delta string) error {
+		report.WriteString(delta)
 		if !emit(contract.StreamFrame{Type: "token", Token: &contract.TokenPayload{Delta: delta}}) {
 			return context.Canceled
 		}
@@ -240,17 +249,41 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 		"firstTokenMs": genFirst, "charCount": res.Chars,
 	})
 
-	// G3b fills citations, takeaways, consensus, related and history; until then
-	// they are empty rather than invented.
+	// ---- finalizing: balance fences first so offsets match the final text ----
+	phase = "finalizing"
+	tf := time.Now()
+	text, dropped := BalanceFences(report.String())
+	if dropped {
+		trace("generating", "degraded", "正文含未闭合的 openui-lang 围栏，已移除该块", nil, map[string]any{"reason": "unclosed_fence"})
+	}
+	cits, hallucinated := ParseCitations(text, ranked)
+	if len(hallucinated) > 0 {
+		trace("generating", "degraded", fmt.Sprintf("正文含 %d 个越界引用编号，已保留在正文且不生成引用", len(hallucinated)), nil,
+			map[string]any{"reason": "hallucinated_citation", "numbers": hallucinated})
+	}
+	consensus := ComputeConsensus(text, cits, ranked)
+	fin, reason := Finalize(ctx, d.LLM, d.Cfg.Timeouts.Finalize, text)
+	if stopped() {
+		return ctx.Err()
+	}
+	if reason != "" {
+		trace("generating", "degraded", "收尾调用降级："+reason, nil, map[string]any{"reason": "finalize_failed", "detail": reason})
+	}
+	if fin.FollowUps != nil {
+		emit(contract.StreamFrame{Type: "related", Related: &contract.RelatedPayload{Items: fin.FollowUps}})
+	}
+	finMs := time.Since(tf).Milliseconds()
+
 	emit(contract.StreamFrame{Type: "done", Done: &contract.DonePayload{
 		LatencyMs: atMs(),
 		StageTimings: contract.StageTimings{
-			RewritingMs: rewriteMs, SearchingMs: searchMs, ReasoningMs: reasonMs, GeneratingMs: genMs,
+			RewritingMs: rewriteMs, SearchingMs: searchMs, ReasoningMs: reasonMs, GeneratingMs: genMs, FinalizingMs: finMs,
 		},
 		FirstTokenMs: firstTokenMs,
 		TokenStats:   res.Usage,
-		Citations:    []contract.Citation{},
-		Takeaways:    []contract.Takeaway{},
+		Citations:    cits,
+		Takeaways:    fin.Takeaways,
+		Consensus:    consensus,
 		Engine:       req.Engine,
 		EnginesUsed:  enginesUsed,
 		Degraded:     degraded,
@@ -259,4 +292,11 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 	}})
 	log.Printf("完成，总耗时 %dms，信源 %d，研报 %d 字", atMs(), len(ranked), res.Chars)
 	return nil
+}
+
+func deref(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
 }

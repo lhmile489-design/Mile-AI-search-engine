@@ -1,0 +1,722 @@
+{
+ "citations": [
+  {
+   "name": "ascii",
+   "report": "See result [1] here.",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "github.com",
+     "passage": "FlashAttention FP8 benchmark."
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 11,
+     "markerEnd": 14,
+     "sentenceStart": 0,
+     "sentenceEnd": 20,
+     "highlight": null
+    }
+   ],
+   "hallucinated": [],
+   "consensus": {
+    "score": 0.0,
+    "supportedSentences": 0,
+    "citedSentences": 1
+   }
+  },
+  {
+   "name": "cjk",
+   "report": "研究结果显示 [1] 性能提升。",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "arxiv.org",
+     "passage": "相关研究表明性能提升。"
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 7,
+     "markerEnd": 10,
+     "sentenceStart": 0,
+     "sentenceEnd": 16,
+     "highlight": {
+      "start": 0,
+      "end": 11,
+      "score": 0.4
+     }
+    }
+   ],
+   "hallucinated": [],
+   "consensus": {
+    "score": 0.0,
+    "supportedSentences": 0,
+    "citedSentences": 1
+   }
+  },
+  {
+   "name": "emoji_surrogate",
+   "report": "前😀句 [1]。后😀句 [2]。",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "arxiv.org",
+     "passage": "前😀句性能提升很明显。其他内容。"
+    },
+    {
+     "index": 2,
+     "domain": "github.com",
+     "passage": "后😀句吞吐量更高。"
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 5,
+     "markerEnd": 8,
+     "sentenceStart": 0,
+     "sentenceEnd": 9,
+     "highlight": {
+      "start": 0,
+      "end": 12,
+      "score": 0.5
+     }
+    },
+    {
+     "index": 2,
+     "markerStart": 14,
+     "markerEnd": 17,
+     "sentenceStart": 9,
+     "sentenceEnd": 18,
+     "highlight": {
+      "start": 0,
+      "end": 10,
+      "score": 0.5
+     }
+    }
+   ],
+   "hallucinated": [],
+   "consensus": {
+    "score": 0.0,
+    "supportedSentences": 0,
+    "citedSentences": 2
+   }
+  },
+  {
+   "name": "mixed_multi_marker_and_hallucination",
+   "report": "FlashAttention-3 在 H100 上达到 1.3 PFLOPs/s [1][2]. Dao et al. 提出 FA3 [3]. 未知引用 [9].",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "arxiv.org",
+     "passage": "FlashAttention-3 reaches 1.3 PFLOPs/s on H100. Other text here."
+    },
+    {
+     "index": 2,
+     "domain": "github.com",
+     "passage": "H100 吞吐量 1.3 PFLOPs/s 的测试。"
+    },
+    {
+     "index": 3,
+     "domain": "tridao.me",
+     "passage": "Dao et al. proposed FA3 for Hopper."
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 41,
+     "markerEnd": 44,
+     "sentenceStart": 0,
+     "sentenceEnd": 48,
+     "highlight": {
+      "start": 0,
+      "end": 46,
+      "score": 0.6
+     }
+    },
+    {
+     "index": 2,
+     "markerStart": 44,
+     "markerEnd": 47,
+     "sentenceStart": 0,
+     "sentenceEnd": 48,
+     "highlight": {
+      "start": 0,
+      "end": 26,
+      "score": 0.5
+     }
+    },
+    {
+     "index": 3,
+     "markerStart": 67,
+     "markerEnd": 70,
+     "sentenceStart": 49,
+     "sentenceEnd": 71,
+     "highlight": {
+      "start": 0,
+      "end": 35,
+      "score": 0.6667
+     }
+    }
+   ],
+   "hallucinated": [
+    9
+   ],
+   "consensus": {
+    "score": 0.5,
+    "supportedSentences": 1,
+    "citedSentences": 2
+   }
+  },
+  {
+   "name": "decimals_versions",
+   "report": "BF16 reaches 840.5 TFLOPs/s [1] and v1.0.2 is stable [2]. Next [1] [2].",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "arxiv.org",
+     "passage": "BF16 reaches 840.5 TFLOPs/s. Unrelated tail."
+    },
+    {
+     "index": 2,
+     "domain": "arxiv.org",
+     "passage": "Version v1.0.2 is stable and released."
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 28,
+     "markerEnd": 31,
+     "sentenceStart": 0,
+     "sentenceEnd": 57,
+     "highlight": {
+      "start": 0,
+      "end": 28,
+      "score": 0.4615
+     }
+    },
+    {
+     "index": 2,
+     "markerStart": 53,
+     "markerEnd": 56,
+     "sentenceStart": 0,
+     "sentenceEnd": 57,
+     "highlight": {
+      "start": 0,
+      "end": 38,
+      "score": 0.4615
+     }
+    },
+    {
+     "index": 1,
+     "markerStart": 63,
+     "markerEnd": 66,
+     "sentenceStart": 58,
+     "sentenceEnd": 71,
+     "highlight": null
+    },
+    {
+     "index": 2,
+     "markerStart": 67,
+     "markerEnd": 70,
+     "sentenceStart": 58,
+     "sentenceEnd": 71,
+     "highlight": {
+      "start": 0,
+      "end": 38,
+      "score": 0.3333
+     }
+    }
+   ],
+   "hallucinated": [],
+   "consensus": {
+    "score": 0.0,
+    "supportedSentences": 0,
+    "citedSentences": 2
+   }
+  },
+  {
+   "name": "abbreviations",
+   "report": "Use a technique, e.g. gradient checkpointing [1], to save memory. BF16 vs. FP8 is compared [2]. The cost is quadratic, i.e. O(n^2) [1].",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "a.com",
+     "passage": "gradient checkpointing saves memory."
+    },
+    {
+     "index": 2,
+     "domain": "b.com",
+     "passage": "BF16 vs FP8 comparison table."
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 45,
+     "markerEnd": 48,
+     "sentenceStart": 0,
+     "sentenceEnd": 65,
+     "highlight": {
+      "start": 0,
+      "end": 36,
+      "score": 0.2727
+     }
+    },
+    {
+     "index": 2,
+     "markerStart": 91,
+     "markerEnd": 94,
+     "sentenceStart": 66,
+     "sentenceEnd": 95,
+     "highlight": {
+      "start": 0,
+      "end": 29,
+      "score": 0.5
+     }
+    },
+    {
+     "index": 1,
+     "markerStart": 131,
+     "markerEnd": 134,
+     "sentenceStart": 96,
+     "sentenceEnd": 135,
+     "highlight": null
+    }
+   ],
+   "hallucinated": [],
+   "consensus": {
+    "score": 0.0,
+    "supportedSentences": 0,
+    "citedSentences": 3
+   }
+  },
+  {
+   "name": "no_citations",
+   "report": "No references here. Just text.",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "github.com",
+     "passage": null
+    }
+   ],
+   "citations": [],
+   "hallucinated": [],
+   "consensus": null
+  },
+  {
+   "name": "below_threshold",
+   "report": "qqqq zzzz wwww [1].",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "github.com",
+     "passage": "Completely different content about FlashAttention."
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 15,
+     "markerEnd": 18,
+     "sentenceStart": 0,
+     "sentenceEnd": 19,
+     "highlight": null
+    }
+   ],
+   "hallucinated": [],
+   "consensus": {
+    "score": 0.0,
+    "supportedSentences": 0,
+    "citedSentences": 1
+   }
+  },
+  {
+   "name": "marker_at_text_start",
+   "report": "[1] leading marker. Tail [2]",
+   "sources": [
+    {
+     "index": 1,
+     "domain": "a.com",
+     "passage": "leading marker text."
+    },
+    {
+     "index": 2,
+     "domain": "b.com",
+     "passage": "Tail text here."
+    }
+   ],
+   "citations": [
+    {
+     "index": 1,
+     "markerStart": 0,
+     "markerEnd": 3,
+     "sentenceStart": 0,
+     "sentenceEnd": 19,
+     "highlight": {
+      "start": 0,
+      "end": 20,
+      "score": 0.6667
+     }
+    },
+    {
+     "index": 2,
+     "markerStart": 25,
+     "markerEnd": 28,
+     "sentenceStart": 20,
+     "sentenceEnd": 28,
+     "highlight": {
+      "start": 0,
+      "end": 15,
+      "score": 0.5
+     }
+    }
+   ],
+   "hallucinated": [],
+   "consensus": {
+    "score": 0.0,
+    "supportedSentences": 0,
+    "citedSentences": 2
+   }
+  }
+ ],
+ "bibtex": [
+  {
+   "category": "preprint",
+   "title": "Attention Is All You Need",
+   "url": "https://arxiv.org/abs/1706.03762",
+   "publishedAt": "2017-06-12",
+   "expected": "@misc{arxiv_1706_03762,\n  title = {{Attention Is All You Need}},\n  year = {2017},\n  eprint = {1706.03762},\n  archivePrefix = {arXiv}\n}"
+  },
+  {
+   "category": "preprint",
+   "title": "FlashAttention",
+   "url": "https://arxiv.org/pdf/2205.14135v2",
+   "publishedAt": null,
+   "expected": "@misc{arxiv_2205_14135,\n  title = {{FlashAttention}},\n  year = {2022},\n  eprint = {2205.14135v2},\n  archivePrefix = {arXiv}\n}"
+  },
+  {
+   "category": "preprint",
+   "title": "FlashAttention-3: Fast & Accurate 100% Attention_v2 #1 $x",
+   "url": "https://arxiv.org/html/2407.08608v1",
+   "publishedAt": "2024-07-11T00:00:00Z",
+   "expected": "@misc{arxiv_2407_08608,\n  title = {{FlashAttention-3: Fast \\& Accurate 100\\% Attention\\_v2 \\#1 \\$x}},\n  year = {2024},\n  eprint = {2407.08608v1},\n  archivePrefix = {arXiv}\n}"
+  },
+  {
+   "category": "preprint",
+   "title": "Old Style",
+   "url": "https://arxiv.org/abs/0704.0001",
+   "publishedAt": null,
+   "expected": "@misc{arxiv_0704_0001,\n  title = {{Old Style}},\n  year = {2007},\n  eprint = {0704.0001},\n  archivePrefix = {arXiv}\n}"
+  },
+  {
+   "category": "preprint",
+   "title": "A DOI Paper",
+   "url": "https://doi.org/10.1145/3503222.3507778",
+   "publishedAt": "2022-02-28",
+   "expected": "@article{2022_a,\n  title = {{A DOI Paper}},\n  year = {2022},\n  doi = {10.1145/3503222.3507778}\n}"
+  },
+  {
+   "category": "preprint",
+   "title": "DOI No Year",
+   "url": "https://doi.org/10.1145/3503222.3507778",
+   "publishedAt": null,
+   "expected": null
+  },
+  {
+   "category": "preprint",
+   "title": "",
+   "url": "https://arxiv.org/abs/1706.03762",
+   "publishedAt": "2017-06-12",
+   "expected": null
+  },
+  {
+   "category": "preprint",
+   "title": "No Id",
+   "url": "https://example.com/paper",
+   "publishedAt": "2020-01-01",
+   "expected": null
+  },
+  {
+   "category": "blog",
+   "title": "Blog Post",
+   "url": "https://arxiv.org/abs/1706.03762",
+   "publishedAt": "2017-06-12",
+   "expected": null
+  },
+  {
+   "category": "preprint",
+   "title": "OpenReview Only",
+   "url": "https://openreview.net/forum?id=tVConYid20",
+   "publishedAt": "2024-01-01",
+   "expected": null
+  },
+  {
+   "category": "preprint",
+   "title": "Bad Year",
+   "url": "https://arxiv.org/abs/1706.03762",
+   "publishedAt": "1800-01-01",
+   "expected": "@misc{arxiv_1706_03762,\n  title = {{Bad Year}},\n  year = {2017},\n  eprint = {1706.03762},\n  archivePrefix = {arXiv}\n}"
+  },
+  {
+   "category": "preprint",
+   "title": "  Padded Title  ",
+   "url": "https://arxiv.org/abs/2401.00001",
+   "publishedAt": "2024-01-02",
+   "expected": "@misc{arxiv_2401_00001,\n  title = {{Padded Title}},\n  year = {2024},\n  eprint = {2401.00001},\n  archivePrefix = {arXiv}\n}"
+  }
+ ],
+ "fences": [
+  {
+   "in": "intro\n```openui-lang\nCard(a)\n```\noutro",
+   "out": "intro\n```openui-lang\nCard(a)\n```\noutro"
+  },
+  {
+   "in": "intro\n```openui-lang\nCard(a)\nmore",
+   "out": "intro"
+  },
+  {
+   "in": "intro\n```openui-lang\nCard(a)\n```\nmid\n```openui-lang\nTable(b)",
+   "out": "intro\n```openui-lang\nCard(a)\n```\nmid"
+  },
+  {
+   "in": "no fences at all\nsecond line",
+   "out": "no fences at all\nsecond line"
+  },
+  {
+   "in": "  ```openui-lang\nindented open\n  ```  \nafter",
+   "out": "  ```openui-lang\nindented open\n  ```  \nafter"
+  },
+  {
+   "in": "head\n```python\nprint(1)\n```\ntail",
+   "out": "head\n```python\nprint(1)\n```\ntail"
+  },
+  {
+   "in": "",
+   "out": ""
+  },
+  {
+   "in": "tail fence ```openui-lang inline is not a fence line",
+   "out": "tail fence ```openui-lang inline is not a fence line"
+  }
+ ],
+ "finalizeJSON": [
+  {
+   "in": "{\"takeaways\":[{\"text\":\"a\",\"citations\":[1]}],\"followUps\":[\"q1\",\"q2\",\"q3\"]}",
+   "out": {
+    "takeaways": [
+     {
+      "text": "a",
+      "citations": [
+       1
+      ]
+     }
+    ],
+    "followUps": [
+     "q1",
+     "q2",
+     "q3"
+    ]
+   }
+  },
+  {
+   "in": "```json\n{\"takeaways\":[{\"text\":\"a\",\"citations\":[1]}],\"followUps\":[\"q\"]}\n```",
+   "out": {
+    "takeaways": [
+     {
+      "text": "a",
+      "citations": [
+       1
+      ]
+     }
+    ],
+    "followUps": [
+     "q"
+    ]
+   }
+  },
+  {
+   "in": "好的，结果如下：\n{\"takeaways\":[],\"followUps\":[\"x\"]}\n以上。",
+   "out": {
+    "takeaways": [],
+    "followUps": [
+     "x"
+    ]
+   }
+  },
+  {
+   "in": "not json at all",
+   "out": null
+  },
+  {
+   "in": "",
+   "out": null
+  },
+  {
+   "in": "{broken json",
+   "out": null
+  },
+  {
+   "in": "```\n{\"a\":1}\n```",
+   "out": {
+    "a": 1
+   }
+  }
+ ],
+ "sentences": [
+  {
+   "in": "We achieve 1.3 PFLOPs/s on H100.",
+   "spans": [
+    [
+     0,
+     32
+    ]
+   ]
+  },
+  {
+   "in": "The library is at v1.0.2 and works well.",
+   "spans": [
+    [
+     0,
+     40
+    ]
+   ]
+  },
+  {
+   "in": "BF16 reaches 840.5 TFLOPs/s and FP8 reaches 1.3 PFLOPs/s. Next sentence here.",
+   "spans": [
+    [
+     0,
+     57
+    ],
+    [
+     58,
+     77
+    ]
+   ]
+  },
+  {
+   "in": "Use a technique, e.g. gradient checkpointing, to save memory. Done.",
+   "spans": [
+    [
+     0,
+     61
+    ],
+    [
+     62,
+     67
+    ]
+   ]
+  },
+  {
+   "in": "The cost is quadratic, i.e. O(n^2). This is expensive.",
+   "spans": [
+    [
+     0,
+     35
+    ],
+    [
+     36,
+     54
+    ]
+   ]
+  },
+  {
+   "in": "BF16 vs. FP8 throughput is compared below.",
+   "spans": [
+    [
+     0,
+     42
+    ]
+   ]
+  },
+  {
+   "in": "Dao et al. proposed FlashAttention. It is efficient.",
+   "spans": [
+    [
+     0,
+     35
+    ],
+    [
+     36,
+     52
+    ]
+   ]
+  },
+  {
+   "in": "Is it fast? Yes! Very fast.",
+   "spans": [
+    [
+     0,
+     11
+    ],
+    [
+     12,
+     16
+    ],
+    [
+     17,
+     27
+    ]
+   ]
+  },
+  {
+   "in": "前😀句。后😀句。",
+   "spans": [
+    [
+     0,
+     4
+    ],
+    [
+     4,
+     8
+    ]
+   ]
+  },
+  {
+   "in": "第一句。第二句。第三句。",
+   "spans": [
+    [
+     0,
+     4
+    ],
+    [
+     4,
+     8
+    ],
+    [
+     8,
+     12
+    ]
+   ]
+  },
+  {
+   "in": "wait... what?! really.",
+   "spans": [
+    [
+     0,
+     7
+    ],
+    [
+     8,
+     14
+    ],
+    [
+     15,
+     22
+    ]
+   ]
+  },
+  {
+   "in": "",
+   "spans": []
+  }
+ ]
+}

@@ -53,10 +53,18 @@ vi.mock("mygo-runtime", async (importOriginal) => {
 });
 
 // mock @/mygo 的 SearchService.search：按 scriptFrames 重放，scriptError 时 reject。
+const searchRunIds: string[] = [];
+const cancelRunIds: string[] = [];
+
 vi.mock("@/mygo", () => ({
   SearchService: {
-    search: (_req: unknown, ch: { push: (f: unknown) => void; isClosed: () => boolean; close: () => void }) =>
+    cancel: (runId: string) => {
+      cancelRunIds.push(runId);
+      return Promise.resolve();
+    },
+    search: (req: { runId: string }, ch: { push: (f: unknown) => void; isClosed: () => boolean; close: () => void }) =>
       (async () => {
+        searchRunIds.push(req.runId);
         try {
           for (const step of scriptFrames) {
             if (step.delay > 0) await new Promise((r) => setTimeout(r, step.delay));
@@ -154,6 +162,11 @@ describe("openMyGoStream", () => {
     const tokenDeltas = events.filter((e) => e.type === "token").map((e) => e.data.delta);
     expect(tokenDeltas).toEqual(["first"]);
     expect(tokenDeltas).not.toContain("late");
+    // 同一个 runId 先传给 search，abort 时再传给 cancel
+    expect(searchRunIds.length).toBeGreaterThan(0);
+    const lastSearch = searchRunIds[searchRunIds.length - 1];
+    expect(lastSearch).toBeTruthy();
+    expect(cancelRunIds).toContain(lastSearch);
   });
 
   it("Go 返回错误时进入错误态", async () => {

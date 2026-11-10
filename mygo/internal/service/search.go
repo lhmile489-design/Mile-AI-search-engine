@@ -6,7 +6,6 @@ package service
 import (
 	"context"
 	"errors"
-	"strconv"
 	"sync"
 
 	"github.com/egoist/mygo"
@@ -26,7 +25,6 @@ var (
 	httpStats provider.Stats
 
 	runsMu sync.Mutex
-	runSeq int
 	runs   = map[string]context.CancelFunc{}
 )
 
@@ -80,16 +78,11 @@ func (SearchService) Search(ctx context.Context, req contract.SearchRequest, ch 
 	rctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	runsMu.Lock()
-	runSeq++
-	id := strconv.Itoa(runSeq)
-	runs[id] = cancel
-	runsMu.Unlock()
-	defer func() {
-		runsMu.Lock()
-		delete(runs, id)
-		runsMu.Unlock()
-	}()
+	release, rej := registerRun(req.RunID, cancel)
+	if rej != "" {
+		return sendRejected(ch, rej)
+	}
+	defer release()
 
 	deps := NewDeps(config.Load())
 	err := pipeline.Run(rctx, deps, req, func(f contract.StreamFrame) error { return ch.Send(f) })
@@ -99,15 +92,47 @@ func (SearchService) Search(ctx context.Context, req contract.SearchRequest, ch 
 	return err
 }
 
-// Cancel aborts in-flight runs. The request carries no run id, so "" or "all"
-// cancels every run; a numeric id cancels that run only.
+// registerRun files cancel under id. A non-empty reject is the 40001 message;
+// otherwise release must be called when the run ends.
+func registerRun(id string, cancel context.CancelFunc) (release func(), reject string) {
+	if id == "" || id == "all" {
+		// A run without its own id could never be canceled individually.
+		return nil, "runId 缺失或非法：调用 search 前必须生成唯一 runId"
+	}
+	runsMu.Lock()
+	defer runsMu.Unlock()
+	if _, dup := runs[id]; dup {
+		return nil, "runId 已被在飞的检索占用：" + id
+	}
+	runs[id] = cancel
+	return func() {
+		runsMu.Lock()
+		delete(runs, id)
+		runsMu.Unlock()
+	}, ""
+}
+
+// sendRejected emits the 40001 error frame for a bad runId.
+func sendRejected(ch *mygo.Channel[contract.StreamFrame], msg string) error {
+	return ch.Send(contract.StreamFrame{Type: "error", Error: &contract.ErrorPayload{
+		Code: 40001, Message: msg, Retryable: false,
+	}})
+}
+
+// Cancel aborts the run registered under runId. "all" is reserved for window
+// close and cancels every run. An empty or unknown id cancels nothing: a stale
+// Cancel must never hit a newer run.
 func (SearchService) Cancel(runId string) error {
 	runsMu.Lock()
 	defer runsMu.Unlock()
-	for id, c := range runs {
-		if runId == "" || runId == "all" || runId == id {
+	if runId == "all" {
+		for _, c := range runs {
 			c()
 		}
+		return nil
+	}
+	if c, ok := runs[runId]; ok {
+		c()
 	}
 	return nil
 }
