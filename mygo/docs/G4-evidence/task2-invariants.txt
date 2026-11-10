@@ -1,0 +1,92 @@
+== go q1_benchmark
+  PASS  no error frame  types=['trace', 'sources', 'trace', 'sources', 'trace', 'token', 'trace', 'related', 'done']
+  PASS  last frame is done  
+  PASS  done exactly once  
+  PASS  ranked sources precede first token  
+  PASS  related precedes done  
+  PASS  stage start order  starts=['rewriting', 'searching', 'reasoning', 'generating']
+  PASS  done fields complete  missing=[]
+  PASS  citation marker slices equal [n]  n=57 bad=[]
+  PASS  fence open/close balanced  fence_lines=2
+  PASS  consensus recomputes equal  recomputed={'score': 0.75, 'supportedSentences': 15, 'citedSentences': 20} done={'score': 0.75, 'supportedSentences': 15, 'citedSentences': 20}
+  PASS  bibtex only on preprint  preprint=3 withBibtex=1
+  PASS  stageTimings four items measured  {'rewritingMs': 1386, 'searchingMs': 3888, 'reasoningMs': 1, 'generatingMs': 11008, 'finalizingMs': 3426}
+  PASS  cacheHit false on fresh run  
+  consensus done={'score': 0.75, 'supportedSentences': 15, 'citedSentences': 20} recomputed={'score': 0.75, 'supportedSentences': 15, 'citedSentences': 20}
+== py q1_benchmark
+  PASS  no error frame  types=['trace', 'sources', 'trace', 'sources', 'trace', 'token', 'trace', 'related', 'done']
+  PASS  last frame is done  
+  PASS  done exactly once  
+  PASS  ranked sources precede first token  
+  PASS  related precedes done  
+  PASS  stage start order  starts=['rewriting', 'searching', 'reasoning', 'generating']
+  PASS  done fields complete  missing=[]
+  PASS  citation marker slices equal [n]  n=45 bad=[]
+  PASS  fence open/close balanced  fence_lines=2
+  PASS  consensus recomputes equal  recomputed={'score': 0.5, 'supportedSentences': 10, 'citedSentences': 20} done={'score': 0.5, 'supportedSentences': 10, 'citedSentences': 20}
+  PASS  bibtex only on preprint  preprint=3 withBibtex=1
+  PASS  stageTimings four items measured  {'rewritingMs': 1201, 'searchingMs': 7178, 'reasoningMs': 3, 'generatingMs': 11345, 'firstTokenMs': 9520, 'finalizingMs': 3480}
+  PASS  cacheHit false on fresh run  
+  consensus done={'score': 0.5, 'supportedSentences': 10, 'citedSentences': 20} recomputed={'score': 0.5, 'supportedSentences': 10, 'citedSentences': 20}
+-- q1_benchmark top10 overlap = 6 (informational)
+== go q2_chinese
+  PASS  no error frame  types=['trace', 'sources', 'trace', 'sources', 'trace', 'token', 'trace', 'related', 'done']
+  PASS  last frame is done  
+  PASS  done exactly once  
+  PASS  ranked sources precede first token  
+  PASS  related precedes done  
+  PASS  stage start order  starts=['rewriting', 'searching', 'reasoning', 'generating']
+  PASS  done fields complete  missing=[]
+  PASS  citation marker slices equal [n]  n=48 bad=[]
+  PASS  fence open/close balanced  fence_lines=6
+  PASS  consensus recomputes equal  recomputed={'score': 0.2593, 'supportedSentences': 7, 'citedSentences': 27} done={'score': 0.2593, 'supportedSentences': 7, 'citedSentences': 27}
+  PASS  bibtex only on preprint  preprint=7 withBibtex=5
+  PASS  stageTimings four items measured  {'rewritingMs': 1263, 'searchingMs': 3764, 'reasoningMs': 1, 'generatingMs': 14521, 'finalizingMs': 3017}
+  PASS  cacheHit false on fresh run  
+  consensus done={'score': 0.2593, 'supportedSentences': 7, 'citedSentences': 27} recomputed={'score': 0.2593, 'supportedSentences': 7, 'citedSentences': 27}
+== py q2_chinese
+  PASS  no error frame  types=['trace', 'sources', 'trace', 'sources', 'trace', 'token', 'trace', 'related', 'done']
+  PASS  last frame is done  
+  PASS  done exactly once  
+  PASS  ranked sources precede first token  
+  PASS  related precedes done  
+  PASS  stage start order  starts=['rewriting', 'searching', 'reasoning', 'generating']
+  PASS  done fields complete  missing=[]
+  PASS  citation marker slices equal [n]  n=30 bad=[]
+  PASS  fence open/close balanced  fence_lines=4
+  PASS  consensus recomputes equal  recomputed={'score': 0.12, 'supportedSentences': 3, 'citedSentences': 25} done={'score': 0.12, 'supportedSentences': 3, 'citedSentences': 25}
+  PASS  bibtex only on preprint  preprint=7 withBibtex=3
+  PASS  stageTimings four items measured  {'rewritingMs': 1362, 'searchingMs': 6073, 'reasoningMs': 2, 'generatingMs': 17488, 'firstTokenMs': 8670, 'finalizingMs': 3998}
+  PASS  cacheHit false on fresh run  
+  consensus done={'score': 0.12, 'supportedSentences': 3, 'citedSentences': 25} recomputed={'score': 0.12, 'supportedSentences': 3, 'citedSentences': 25}
+-- q2_chinese top10 overlap = 4 (informational)
+== go q3_code
+  PASS  no error frame  types=['trace', 'sources', 'trace', 'sources', 'trace', 'token', 'trace', 'related', 'done']
+  PASS  last frame is done  
+  PASS  done exactly once  
+  PASS  ranked sources precede first token  
+  PASS  related precedes done  
+  PASS  stage start order  starts=['rewriting', 'searching', 'reasoning', 'generating']
+  PASS  done fields complete  missing=[]
+  PASS  citation marker slices equal [n]  n=35 bad=[]
+  PASS  fence open/close balanced  fence_lines=4
+  PASS  consensus recomputes equal  recomputed={'score': 0.1481, 'supportedSentences': 4, 'citedSentences': 27} done={'score': 0.1481, 'supportedSentences': 4, 'citedSentences': 27}
+  PASS  bibtex only on preprint  preprint=2 withBibtex=1
+  PASS  stageTimings four items measured  {'rewritingMs': 957, 'searchingMs': 2800, 'reasoningMs': 2, 'generatingMs': 13142, 'finalizingMs': 3578}
+  PASS  cacheHit false on fresh run  
+  consensus done={'score': 0.1481, 'supportedSentences': 4, 'citedSentences': 27} recomputed={'score': 0.1481, 'supportedSentences': 4, 'citedSentences': 27}
+== py q3_code
+  PASS  no error frame  types=['trace', 'sources', 'trace', 'sources', 'trace', 'sources', 'trace', 'token', 'trace', 'done']
+  PASS  last frame is done  
+  PASS  done exactly once  
+  PASS  ranked sources precede first token  
+  PASS  stage start order  starts=['rewriting', 'searching', 'reasoning', 'generating']
+  PASS  done fields complete  missing=[]
+  PASS  citation marker slices equal [n]  n=40 bad=[]
+  PASS  fence open/close balanced  fence_lines=6
+  PASS  consensus recomputes equal  recomputed={'score': 0.3333, 'supportedSentences': 8, 'citedSentences': 24} done={'score': 0.3333, 'supportedSentences': 8, 'citedSentences': 24}
+  PASS  bibtex only on preprint  preprint=2 withBibtex=2
+  PASS  stageTimings four items measured  {'rewritingMs': 1248, 'searchingMs': 7746, 'reasoningMs': 1, 'generatingMs': 10276, 'firstTokenMs': 10000, 'finalizingMs': 2625}
+  PASS  cacheHit false on fresh run  
+  consensus done={'score': 0.3333, 'supportedSentences': 8, 'citedSentences': 24} recomputed={'score': 0.3333, 'supportedSentences': 8, 'citedSentences': 24}
+-- q3_code top10 overlap = 5 (informational)
