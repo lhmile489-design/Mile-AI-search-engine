@@ -1,11 +1,9 @@
 // Package service hosts the bound services the page calls. Search, GetConfig,
-// GetSuggestions and Cancel are real (G3a); history and settings stay stubs
-// until G3b. No stub returns fabricated data.
+// GetSuggestions, Cancel, history and settings are all real.
 package service
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	"github.com/egoist/mygo"
@@ -15,9 +13,6 @@ import (
 	"github.com/lhmile489-design/mile-ai-search/internal/pipeline"
 	"github.com/lhmile489-design/mile-ai-search/internal/provider"
 )
-
-// ErrNotImplemented is returned by the methods that arrive in G3b.
-var ErrNotImplemented = errors.New("not implemented (G3b): arrives in the next milestone")
 
 // Shared state. SearchService is bound by value, so the registry and HTTP
 // stats live at package level.
@@ -48,9 +43,10 @@ type SearchService struct{}
 func NewDeps(cfg config.Config) pipeline.Deps {
 	hc := provider.NewHTTPClient(&httpStats)
 	llm := &provider.LLM{Client: hc, BaseURL: cfg.LLMBaseURL, Key: cfg.LLMAPIKey, Model: cfg.LLMModel}
-	return pipeline.Deps{
-		Cfg: cfg,
-		LLM: llm,
+	d := pipeline.Deps{
+		Cfg:   cfg,
+		LLM:   llm,
+		Cache: sharedCache(cfg),
 		Providers: func(engine string) (provider.Provider, provider.Provider, bool) {
 			tav := func() provider.Provider { return &provider.Tavily{Key: cfg.TavilyAPIKey, HTTP: hc} }
 			ds := func() provider.Provider { return &provider.DeepSeekSearch{Key: cfg.LLMAPIKey, HTTP: hc} }
@@ -69,6 +65,10 @@ func NewDeps(cfg config.Config) pipeline.Deps {
 			return nil, nil, false
 		},
 	}
+	if h := sharedHistory(); h != nil {
+		d.History = h
+	}
+	return d
 }
 
 // Search streams StreamFrames for one request over ch. The call's ctx is
@@ -171,24 +171,4 @@ func (SearchService) GetConfig() (contract.AppConfig, error) {
 // GetSuggestions returns first-screen recommended questions (§13.6).
 func (SearchService) GetSuggestions() (contract.SuggestionsData, error) {
 	return contract.SuggestionsData{Items: Suggestions}, nil
-}
-
-// ListHistory returns paged history cards (§13.2). G3b.
-func (SearchService) ListHistory(page, pageSize int, q string) (contract.HistoryList, error) {
-	return contract.HistoryList{}, ErrNotImplemented
-}
-
-// GetHistory returns one full snapshot (§13.3). G3b.
-func (SearchService) GetHistory(id string) (contract.HistoryDetail, error) {
-	return contract.HistoryDetail{}, ErrNotImplemented
-}
-
-// DeleteHistory removes one record (§13.4). G3b.
-func (SearchService) DeleteHistory(id string) error {
-	return ErrNotImplemented
-}
-
-// SaveSettings writes LLM/Tavily keys (PRODUCT §8). Write-only. G3b.
-func (SearchService) SaveSettings(s contract.Settings) error {
-	return ErrNotImplemented
 }

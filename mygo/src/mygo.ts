@@ -324,7 +324,7 @@ export const SearchService = {
   cancel(runId: string): Promise<void> {
     return call("SearchService.Cancel", runId);
   },
-  /** DeleteHistory removes one record (§13.4). G3b. */
+  /** DeleteHistory removes one record (§13.4). */
   deleteHistory(id: string): Promise<void> {
     return call("SearchService.DeleteHistory", id);
   },
@@ -332,7 +332,7 @@ export const SearchService = {
   getConfig(): Promise<AppConfig> {
     return call("SearchService.GetConfig");
   },
-  /** GetHistory returns one full snapshot (§13.3). G3b. */
+  /** GetHistory returns one full snapshot (§13.3). */
   getHistory(id: string): Promise<HistoryDetail> {
     return call("SearchService.GetHistory", id);
   },
@@ -340,11 +340,15 @@ export const SearchService = {
   getSuggestions(): Promise<SuggestionsData> {
     return call("SearchService.GetSuggestions");
   },
-  /** ListHistory returns paged history cards (§13.2). G3b. */
+  /** ListHistory returns paged history cards (§13.2). */
   listHistory(page: number, pageSize: number, q: string): Promise<HistoryList> {
     return call("SearchService.ListHistory", page, pageSize, q);
   },
-  /** SaveSettings writes LLM/Tavily keys (PRODUCT §8). Write-only. G3b. */
+  /**
+   * SaveSettings writes the keys into %APPDATA%\MileAISearch\.env. Empty values
+   * keep the old key. Config is re-read on every call, so the change is live
+   * immediately. Nothing about the values is logged.
+   */
   saveSettings(s: Settings): Promise<void> {
     return call("SearchService.SaveSettings", s);
   },

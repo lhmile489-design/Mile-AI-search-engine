@@ -1,0 +1,120 @@
+{
+  "l2": [
+    {
+      "query": "FlashAttention-3 FP8",
+      "focusMode": "web",
+      "engine": "tavily",
+      "scope": [],
+      "key": "327e363cb0e1a10d130254732d734b8f77af370cbeddad71c5d990044a4d3c34"
+    },
+    {
+      "query": "  FlashAttention-3 FP8  ",
+      "focusMode": "web",
+      "engine": "tavily",
+      "scope": [],
+      "key": "327e363cb0e1a10d130254732d734b8f77af370cbeddad71c5d990044a4d3c34"
+    },
+    {
+      "query": "FLASHATTENTION-3 fp8",
+      "focusMode": "web",
+      "engine": "tavily",
+      "scope": [],
+      "key": "327e363cb0e1a10d130254732d734b8f77af370cbeddad71c5d990044a4d3c34"
+    },
+    {
+      "query": "FlashAttention-3 FP8",
+      "focusMode": "academic",
+      "engine": "tavily",
+      "scope": [],
+      "key": "0ac9471a2e44d6e4f43e2093cba130ee0964227aa1aff1718090108c39becc33"
+    },
+    {
+      "query": "FlashAttention-3 FP8",
+      "focusMode": "web",
+      "engine": "deepseek",
+      "scope": [],
+      "key": "37a54f77db2e26d3232f3c87f6b35799c2650b0c30d72a9325d7640bb998af45"
+    },
+    {
+      "query": "FlashAttention-3 FP8",
+      "focusMode": "web",
+      "engine": "tavily",
+      "scope": [
+        "code",
+        "preprint"
+      ],
+      "key": "4579ddf21b89a2e69038503e897780520625339bb649320d1930709f2e74d40d"
+    },
+    {
+      "query": "FlashAttention-3 FP8",
+      "focusMode": "web",
+      "engine": "tavily",
+      "scope": [
+        "preprint",
+        "code"
+      ],
+      "key": "4579ddf21b89a2e69038503e897780520625339bb649320d1930709f2e74d40d"
+    },
+    {
+      "query": "大语言模型量化方法 GPTQ",
+      "focusMode": "code",
+      "engine": "tavily",
+      "scope": [
+        "docs"
+      ],
+      "key": "47856554811c93b1785a65ce605646b86a5305b6da637acac95e585889955119"
+    },
+    {
+      "query": "café",
+      "focusMode": "web",
+      "engine": "tavily",
+      "scope": [],
+      "key": "63ab5e516358986b94b354ecb6a62a474221981510dbc13f88db1ba749937c31"
+    },
+    {
+      "query": "café",
+      "focusMode": "web",
+      "engine": "tavily",
+      "scope": [],
+      "key": "63ab5e516358986b94b354ecb6a62a474221981510dbc13f88db1ba749937c31"
+    }
+  ],
+  "l1": [
+    {
+      "engine": "tavily",
+      "scope": [],
+      "subQuery": "flash attention 3 benchmark",
+      "key": "59bf71c3096a8c797b6885dd69257e451ea87bdb68d692550a54ffe1ec6a2f7c"
+    },
+    {
+      "engine": "tavily",
+      "scope": [],
+      "subQuery": "  flash attention 3 benchmark  ",
+      "key": "59bf71c3096a8c797b6885dd69257e451ea87bdb68d692550a54ffe1ec6a2f7c"
+    },
+    {
+      "engine": "deepseek",
+      "scope": [],
+      "subQuery": "flash attention 3 benchmark",
+      "key": "332a6b7d6048434c112e9174a31f94cf20f63bc6e14dfd3bec28cbf83f4657f0"
+    },
+    {
+      "engine": "tavily",
+      "scope": [
+        "code",
+        "blog"
+      ],
+      "subQuery": "Hopper 张量核心",
+      "key": "b6d2a92b9e49b4c2e44b9f15fa46a29bd6d93b4c1af8a7fa49e72baf4eb7e263"
+    },
+    {
+      "engine": "tavily",
+      "scope": [
+        "blog",
+        "code"
+      ],
+      "subQuery": "Hopper 张量核心",
+      "key": "b6d2a92b9e49b4c2e44b9f15fa46a29bd6d93b4c1af8a7fa49e72baf4eb7e263"
+    }
+  ]
+}

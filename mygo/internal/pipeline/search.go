@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/lhmile489-design/mile-ai-search/internal/cache"
 	"github.com/lhmile489-design/mile-ai-search/internal/contract"
 	"github.com/lhmile489-design/mile-ai-search/internal/provider"
 )
@@ -17,6 +18,7 @@ type Batch struct {
 	Engine   string // engine that produced the results; "none" when both failed
 	Sources  []provider.Source
 	Degraded bool // primary failed, fallback answered
+	CacheHit bool // served from the L1 cache
 }
 
 // SearchPlan is the retrieval input.
@@ -26,6 +28,8 @@ type SearchPlan struct {
 	Queries  []string
 	Scope    []string
 	Timeout  time.Duration
+	Cache    *CacheStore // optional L1
+	Engine   string      // requested engine, part of the L1 key
 }
 
 // RawCard converts a hit to the trimmed phase=raw card.
@@ -39,6 +43,15 @@ func RawCard(s provider.Source) contract.RawSource {
 }
 
 func searchOne(ctx context.Context, plan SearchPlan, idx int, q string) Batch {
+	l1Key := cache.L1Key(plan.Engine, plan.Scope, q)
+	if e, ok := plan.Cache.GetL1(l1Key); ok {
+		src := cloneSources(e.Sources)
+		for i := range src {
+			src[i].MatchedQueries = []int{idx}
+		}
+		// the engine stays the real one; the hit is reported via trace cacheHit
+		return Batch{Index: idx, Engine: e.Engine, Sources: src, CacheHit: true}
+	}
 	exclude := provider.ExcludeCategories(plan.Scope)
 	try := func(p provider.Provider) ([]provider.Source, error) {
 		cctx, cancel := context.WithTimeout(ctx, plan.Timeout)
@@ -55,6 +68,7 @@ func searchOne(ctx context.Context, plan SearchPlan, idx int, q string) Batch {
 
 	res, err := try(plan.Primary)
 	if err == nil {
+		plan.Cache.SetL1(l1Key, L1Entry{Engine: plan.Primary.Name(), Sources: cloneSources(res)})
 		return Batch{Index: idx, Engine: plan.Primary.Name(), Sources: res}
 	}
 	if ctx.Err() != nil {
@@ -64,6 +78,7 @@ func searchOne(ctx context.Context, plan SearchPlan, idx int, q string) Batch {
 	if plan.Fallback != nil {
 		res, err = try(plan.Fallback)
 		if err == nil {
+			plan.Cache.SetL1(l1Key, L1Entry{Engine: plan.Fallback.Name(), Sources: cloneSources(res)})
 			return Batch{Index: idx, Engine: plan.Fallback.Name(), Sources: res, Degraded: true}
 		}
 		if ctx.Err() == nil {

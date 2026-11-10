@@ -85,6 +85,7 @@ mygo generate               # 重新生成 src/mygo.ts
 mygo build -skip-installer  # 出 exe，不下载 NSIS
 go test ./...
 bun run typecheck
+bunx vitest run             # 前端单测;本机 `bun run test` 会命中系统 test 命令,不要用
 ```
 
 端口 3000、8000 可能被其他 session 占用，不抢占，不结束不是自己启动的进程。控制台中文乱码不代表文件坏了，以文件真实字节为准。

@@ -114,8 +114,22 @@ def run_citation_case(c):
     sources = [src(*s) for s in c["sources"]]
     cits, hall = parse_citations(c["report"], sources)
     cons = compute_consensus(c["report"], cits, sources)
+
+    def u16slice(text, start, end):
+        b = text.encode("utf-16-le")
+        return b[start * 2:end * 2].decode("utf-16-le")
+
+    passages = {i: p for (i, _d, p) in c["sources"]}
+    hl_texts = []
+    for ct in cits:
+        h = ct["highlight"]
+        if h is None:
+            hl_texts.append(None)
+        else:
+            hl_texts.append(u16slice(passages[ct["index"]], h["start"], h["end"]))
     return {
         "name": c["name"],
+        "highlightTexts": hl_texts,
         "report": c["report"],
         "sources": [
             {"index": i, "domain": d, "passage": p} for (i, d, p) in c["sources"]

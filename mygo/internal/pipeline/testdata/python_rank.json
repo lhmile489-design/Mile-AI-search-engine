@@ -1,0 +1,925 @@
+[
+ {
+  "focusMode": "web",
+  "scope": [],
+  "now": "2026-11-10T00:00:00Z",
+  "ranked": [
+   {
+    "index": 1,
+    "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf",
+    "category": "preprint",
+    "relevance": 0.83932644,
+    "authority": 0.8,
+    "freshness": null,
+    "final": 0.823133,
+    "matchedQueries": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "index": 2,
+    "url": "https://docs.feishu.cn/v/wiki/EBPnwBiVoiQZvFkU3MAcLNkHnbh/ab",
+    "category": "docs",
+    "relevance": 0.77137923,
+    "authority": 0.85,
+    "freshness": null,
+    "final": 0.803753,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 3,
+    "url": "https://www.spheron.network/blog/gpu-producer-consumer-kernel-pattern-flashattention",
+    "category": "blog",
+    "relevance": 0.8909888,
+    "authority": 0.5,
+    "freshness": 0.8957052022048388,
+    "final": 0.75485,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 4,
+    "url": "https://github.com/Dao-AILab/flash-attention/issues/1848",
+    "category": "code",
+    "relevance": 0.8473754,
+    "authority": 0.7,
+    "freshness": 0.4336252125966308,
+    "final": 0.733731,
+    "matchedQueries": [
+     0,
+     1
+    ]
+   },
+   {
+    "index": 5,
+    "url": "https://arxiv.org/pdf/2407.08608",
+    "category": "preprint",
+    "relevance": 0.84027237,
+    "authority": 0.8,
+    "freshness": 0.19867650121323377,
+    "final": 0.729938,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 6,
+    "url": "https://pytorch.org/blog/flashattention-3",
+    "category": "blog",
+    "relevance": 0.8846886,
+    "authority": 0.5,
+    "freshness": null,
+    "final": 0.726287,
+    "matchedQueries": [
+     0,
+     2
+    ]
+   },
+   {
+    "index": 7,
+    "url": "https://www.youtube.com/watch?v=9LOxouj1o9M&vl=en",
+    "category": "blog",
+    "relevance": 0.79637206,
+    "authority": 0.5,
+    "freshness": 0.9943190975860928,
+    "final": 0.722334,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 8,
+    "url": "https://yobitel.com/knowledge-base/flash-attention-3",
+    "category": "blog",
+    "relevance": 0.8415267,
+    "authority": 0.5,
+    "freshness": 0.7916933830963551,
+    "final": 0.714517,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 9,
+    "url": "https://arxiv.org/html/2407.08608v1",
+    "category": "preprint",
+    "relevance": 0.80070794,
+    "authority": 0.8,
+    "freshness": 0.1982995659269405,
+    "final": 0.710099,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 10,
+    "url": "https://pristren.com/blog/flashattention-3-algorithm-guide",
+    "category": "blog",
+    "relevance": 0.8783249,
+    "authority": 0.5,
+    "freshness": 0.6387948813107176,
+    "final": 0.709982,
+    "matchedQueries": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "index": 11,
+    "url": "https://www.onyxgs.com/blog/understanding-flashattention-3-nvidia-hopper",
+    "category": "blog",
+    "relevance": 0.8296166,
+    "authority": 0.5,
+    "freshness": null,
+    "final": 0.693892,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 12,
+    "url": "https://zhuanlan.zhihu.com/p/708409249",
+    "category": "blog",
+    "relevance": 0.81979275,
+    "authority": 0.5,
+    "freshness": null,
+    "final": 0.688113,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 13,
+    "url": "https://github.com/dao-ailab/flash-attention",
+    "category": "code",
+    "relevance": 0.8396422,
+    "authority": 0.7,
+    "freshness": 0.11651843520159874,
+    "final": 0.682299,
+    "matchedQueries": [
+     0,
+     1
+    ]
+   },
+   {
+    "index": 14,
+    "url": "https://aman.ai/primers/ai/flashattention",
+    "category": "blog",
+    "relevance": 0.8156003,
+    "authority": 0.5,
+    "freshness": 0.40805890038877385,
+    "final": 0.644009,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 15,
+    "url": "https://www.emergentmind.com/topics/flashattention-3-baseline",
+    "category": "blog",
+    "relevance": 0.767847,
+    "authority": 0.5,
+    "freshness": 0.5394604283601847,
+    "final": 0.639843,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 16,
+    "url": "https://pytorch.ac.cn/blog/flashattention-3",
+    "category": "blog",
+    "relevance": 0.8682137,
+    "authority": 0.5,
+    "freshness": 0.1982995659269405,
+    "final": 0.638852,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 17,
+    "url": "https://tridao.me/publications/flash3/flash3.pdf",
+    "category": "blog",
+    "relevance": 0.843393,
+    "authority": 0.5,
+    "freshness": 0.2729963998033052,
+    "final": 0.637646,
+    "matchedQueries": [
+     1,
+     2
+    ]
+   },
+   {
+    "index": 18,
+    "url": "https://github.com/triton-lang/triton/issues/4308",
+    "category": "code",
+    "relevance": 0.6854659,
+    "authority": 0.7,
+    "freshness": 0.1982995659269405,
+    "final": 0.617478,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 19,
+    "url": "https://www.youtube.com/watch?v=JwUcZwPOCpA",
+    "category": "blog",
+    "relevance": 0.80070794,
+    "authority": 0.5,
+    "freshness": 0.2528648403447583,
+    "final": 0.613284,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 20,
+    "url": "https://www.csl.cornell.edu/~zhiruz/pdfs/tawa-cgo2026.pdf",
+    "category": "blog",
+    "relevance": 0.68748367,
+    "authority": 0.5,
+    "freshness": 0.6277095695339675,
+    "final": 0.612898,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 21,
+    "url": "https://developer.nvidia.cn/blog/next-generation-of-flashattention",
+    "category": "blog",
+    "relevance": 0.76596165,
+    "authority": 0.5,
+    "freshness": 0.19839204510452987,
+    "final": 0.58774,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 22,
+    "url": "https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper",
+    "category": "blog",
+    "relevance": 0.7429634,
+    "authority": 0.5,
+    "freshness": 0.20860934576512372,
+    "final": 0.577773,
+    "matchedQueries": [
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "focusMode": "academic",
+  "scope": [],
+  "now": "2026-11-10T00:00:00Z",
+  "ranked": [
+   {
+    "index": 1,
+    "url": "https://docs.feishu.cn/v/wiki/EBPnwBiVoiQZvFkU3MAcLNkHnbh/ab",
+    "category": "docs",
+    "relevance": 0.77137923,
+    "authority": 0.85,
+    "freshness": null,
+    "final": 0.820517,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 2,
+    "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf",
+    "category": "preprint",
+    "relevance": 0.83932644,
+    "authority": 0.8,
+    "freshness": null,
+    "final": 0.814747,
+    "matchedQueries": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "index": 3,
+    "url": "https://www.spheron.network/blog/gpu-producer-consumer-kernel-pattern-flashattention",
+    "category": "blog",
+    "relevance": 0.8909888,
+    "authority": 0.5,
+    "freshness": 0.8957052022048388,
+    "final": 0.696438,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 4,
+    "url": "https://arxiv.org/pdf/2407.08608",
+    "category": "preprint",
+    "relevance": 0.84027237,
+    "authority": 0.8,
+    "freshness": 0.19867650121323377,
+    "final": 0.691817,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 5,
+    "url": "https://github.com/Dao-AILab/flash-attention/issues/1848",
+    "category": "code",
+    "relevance": 0.8473754,
+    "authority": 0.7,
+    "freshness": 0.4336252125966308,
+    "final": 0.690938,
+    "matchedQueries": [
+     0,
+     1
+    ]
+   },
+   {
+    "index": 6,
+    "url": "https://www.youtube.com/watch?v=9LOxouj1o9M&vl=en",
+    "category": "blog",
+    "relevance": 0.79637206,
+    "authority": 0.5,
+    "freshness": 0.9943190975860928,
+    "final": 0.687775,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 7,
+    "url": "https://arxiv.org/html/2407.08608v1",
+    "category": "preprint",
+    "relevance": 0.80070794,
+    "authority": 0.8,
+    "freshness": 0.1982995659269405,
+    "final": 0.679872,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 8,
+    "url": "https://yobitel.com/knowledge-base/flash-attention-3",
+    "category": "blog",
+    "relevance": 0.8415267,
+    "authority": 0.5,
+    "freshness": 0.7916933830963551,
+    "final": 0.660797,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 9,
+    "url": "https://pytorch.org/blog/flashattention-3",
+    "category": "blog",
+    "relevance": 0.8846886,
+    "authority": 0.5,
+    "freshness": null,
+    "final": 0.644258,
+    "matchedQueries": [
+     0,
+     2
+    ]
+   },
+   {
+    "index": 10,
+    "url": "https://pristren.com/blog/flashattention-3-algorithm-guide",
+    "category": "blog",
+    "relevance": 0.8783249,
+    "authority": 0.5,
+    "freshness": 0.6387948813107176,
+    "final": 0.641256,
+    "matchedQueries": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "index": 11,
+    "url": "https://github.com/dao-ailab/flash-attention",
+    "category": "code",
+    "relevance": 0.8396422,
+    "authority": 0.7,
+    "freshness": 0.11651843520159874,
+    "final": 0.625196,
+    "matchedQueries": [
+     0,
+     1
+    ]
+   },
+   {
+    "index": 12,
+    "url": "https://www.onyxgs.com/blog/understanding-flashattention-3-nvidia-hopper",
+    "category": "blog",
+    "relevance": 0.8296166,
+    "authority": 0.5,
+    "freshness": null,
+    "final": 0.623606,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 13,
+    "url": "https://zhuanlan.zhihu.com/p/708409249",
+    "category": "blog",
+    "relevance": 0.81979275,
+    "authority": 0.5,
+    "freshness": null,
+    "final": 0.619922,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 14,
+    "url": "https://github.com/triton-lang/triton/issues/4308",
+    "category": "code",
+    "relevance": 0.6854659,
+    "authority": 0.7,
+    "freshness": 0.1982995659269405,
+    "final": 0.5953,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 15,
+    "url": "https://www.emergentmind.com/topics/flashattention-3-baseline",
+    "category": "blog",
+    "relevance": 0.767847,
+    "authority": 0.5,
+    "freshness": 0.5394604283601847,
+    "final": 0.588246,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 16,
+    "url": "https://www.csl.cornell.edu/~zhiruz/pdfs/tawa-cgo2026.pdf",
+    "category": "blog",
+    "relevance": 0.68748367,
+    "authority": 0.5,
+    "freshness": 0.6277095695339675,
+    "final": 0.581787,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 17,
+    "url": "https://aman.ai/primers/ai/flashattention",
+    "category": "blog",
+    "relevance": 0.8156003,
+    "authority": 0.5,
+    "freshness": 0.40805890038877385,
+    "final": 0.576292,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 18,
+    "url": "https://tridao.me/publications/flash3/flash3.pdf",
+    "category": "blog",
+    "relevance": 0.843393,
+    "authority": 0.5,
+    "freshness": 0.2729963998033052,
+    "final": 0.557617,
+    "matchedQueries": [
+     1,
+     2
+    ]
+   },
+   {
+    "index": 19,
+    "url": "https://pytorch.ac.cn/blog/flashattention-3",
+    "category": "blog",
+    "relevance": 0.8682137,
+    "authority": 0.5,
+    "freshness": 0.1982995659269405,
+    "final": 0.550124,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 20,
+    "url": "https://www.youtube.com/watch?v=JwUcZwPOCpA",
+    "category": "blog",
+    "relevance": 0.80070794,
+    "authority": 0.5,
+    "freshness": 0.2528648403447583,
+    "final": 0.540785,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 21,
+    "url": "https://developer.nvidia.cn/blog/next-generation-of-flashattention",
+    "category": "blog",
+    "relevance": 0.76596165,
+    "authority": 0.5,
+    "freshness": 0.19839204510452987,
+    "final": 0.519467,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 22,
+    "url": "https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper",
+    "category": "blog",
+    "relevance": 0.7429634,
+    "authority": 0.5,
+    "freshness": 0.20860934576512372,
+    "final": 0.514611,
+    "matchedQueries": [
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "focusMode": "code",
+  "scope": [],
+  "now": "2026-11-10T00:00:00Z",
+  "ranked": [
+   {
+    "index": 1,
+    "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf",
+    "category": "preprint",
+    "relevance": 0.83932644,
+    "authority": 0.8,
+    "freshness": null,
+    "final": 0.819663,
+    "matchedQueries": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "index": 2,
+    "url": "https://docs.feishu.cn/v/wiki/EBPnwBiVoiQZvFkU3MAcLNkHnbh/ab",
+    "category": "docs",
+    "relevance": 0.77137923,
+    "authority": 0.85,
+    "freshness": null,
+    "final": 0.81069,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 3,
+    "url": "https://www.spheron.network/blog/gpu-producer-consumer-kernel-pattern-flashattention",
+    "category": "blog",
+    "relevance": 0.8909888,
+    "authority": 0.5,
+    "freshness": 0.8957052022048388,
+    "final": 0.735537,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 4,
+    "url": "https://www.youtube.com/watch?v=9LOxouj1o9M&vl=en",
+    "category": "blog",
+    "relevance": 0.79637206,
+    "authority": 0.5,
+    "freshness": 0.9943190975860928,
+    "final": 0.717413,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 5,
+    "url": "https://github.com/Dao-AILab/flash-attention/issues/1848",
+    "category": "code",
+    "relevance": 0.8473754,
+    "authority": 0.7,
+    "freshness": 0.4336252125966308,
+    "final": 0.705675,
+    "matchedQueries": [
+     0,
+     1
+    ]
+   },
+   {
+    "index": 6,
+    "url": "https://arxiv.org/pdf/2407.08608",
+    "category": "preprint",
+    "relevance": 0.84027237,
+    "authority": 0.8,
+    "freshness": 0.19867650121323377,
+    "final": 0.695844,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 7,
+    "url": "https://yobitel.com/knowledge-base/flash-attention-3",
+    "category": "blog",
+    "relevance": 0.8415267,
+    "authority": 0.5,
+    "freshness": 0.7916933830963551,
+    "final": 0.694949,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 8,
+    "url": "https://pytorch.org/blog/flashattention-3",
+    "category": "blog",
+    "relevance": 0.8846886,
+    "authority": 0.5,
+    "freshness": null,
+    "final": 0.692344,
+    "matchedQueries": [
+     0,
+     2
+    ]
+   },
+   {
+    "index": 9,
+    "url": "https://arxiv.org/html/2407.08608v1",
+    "category": "preprint",
+    "relevance": 0.80070794,
+    "authority": 0.8,
+    "freshness": 0.1982995659269405,
+    "final": 0.679943,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 10,
+    "url": "https://pristren.com/blog/flashattention-3-algorithm-guide",
+    "category": "blog",
+    "relevance": 0.8783249,
+    "authority": 0.5,
+    "freshness": 0.6387948813107176,
+    "final": 0.679089,
+    "matchedQueries": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "index": 11,
+    "url": "https://www.onyxgs.com/blog/understanding-flashattention-3-nvidia-hopper",
+    "category": "blog",
+    "relevance": 0.8296166,
+    "authority": 0.5,
+    "freshness": null,
+    "final": 0.664808,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 12,
+    "url": "https://zhuanlan.zhihu.com/p/708409249",
+    "category": "blog",
+    "relevance": 0.81979275,
+    "authority": 0.5,
+    "freshness": null,
+    "final": 0.659896,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 13,
+    "url": "https://github.com/dao-ailab/flash-attention",
+    "category": "code",
+    "relevance": 0.8396422,
+    "authority": 0.7,
+    "freshness": 0.11651843520159874,
+    "final": 0.639161,
+    "matchedQueries": [
+     0,
+     1
+    ]
+   },
+   {
+    "index": 14,
+    "url": "https://www.emergentmind.com/topics/flashattention-3-baseline",
+    "category": "blog",
+    "relevance": 0.767847,
+    "authority": 0.5,
+    "freshness": 0.5394604283601847,
+    "final": 0.615031,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 15,
+    "url": "https://aman.ai/primers/ai/flashattention",
+    "category": "blog",
+    "relevance": 0.8156003,
+    "authority": 0.5,
+    "freshness": 0.40805890038877385,
+    "final": 0.607852,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 16,
+    "url": "https://www.csl.cornell.edu/~zhiruz/pdfs/tawa-cgo2026.pdf",
+    "category": "blog",
+    "relevance": 0.68748367,
+    "authority": 0.5,
+    "freshness": 0.6277095695339675,
+    "final": 0.600535,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 17,
+    "url": "https://github.com/triton-lang/triton/issues/4308",
+    "category": "code",
+    "relevance": 0.6854659,
+    "authority": 0.7,
+    "freshness": 0.1982995659269405,
+    "final": 0.593846,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 18,
+    "url": "https://tridao.me/publications/flash3/flash3.pdf",
+    "category": "blog",
+    "relevance": 0.843393,
+    "authority": 0.5,
+    "freshness": 0.2729963998033052,
+    "final": 0.591956,
+    "matchedQueries": [
+     1,
+     2
+    ]
+   },
+   {
+    "index": 19,
+    "url": "https://pytorch.ac.cn/blog/flashattention-3",
+    "category": "blog",
+    "relevance": 0.8682137,
+    "authority": 0.5,
+    "freshness": 0.1982995659269405,
+    "final": 0.586945,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 20,
+    "url": "https://www.youtube.com/watch?v=JwUcZwPOCpA",
+    "category": "blog",
+    "relevance": 0.80070794,
+    "authority": 0.5,
+    "freshness": 0.2528648403447583,
+    "final": 0.570856,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 21,
+    "url": "https://developer.nvidia.cn/blog/next-generation-of-flashattention",
+    "category": "blog",
+    "relevance": 0.76596165,
+    "authority": 0.5,
+    "freshness": 0.19839204510452987,
+    "final": 0.546063,
+    "matchedQueries": [
+     0
+    ]
+   },
+   {
+    "index": 22,
+    "url": "https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper",
+    "category": "blog",
+    "relevance": 0.7429634,
+    "authority": 0.5,
+    "freshness": 0.20860934576512372,
+    "final": 0.538907,
+    "matchedQueries": [
+     2
+    ]
+   }
+  ]
+ },
+ {
+  "focusMode": "web",
+  "scope": [
+   "preprint",
+   "code"
+  ],
+  "now": "2026-11-10T00:00:00Z",
+  "ranked": [
+   {
+    "index": 1,
+    "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf",
+    "category": "preprint",
+    "relevance": 0.83932644,
+    "authority": 0.8,
+    "freshness": null,
+    "final": 0.823133,
+    "matchedQueries": [
+     0,
+     1,
+     2
+    ]
+   },
+   {
+    "index": 2,
+    "url": "https://github.com/Dao-AILab/flash-attention/issues/1848",
+    "category": "code",
+    "relevance": 0.8473754,
+    "authority": 0.7,
+    "freshness": 0.4336252125966308,
+    "final": 0.733731,
+    "matchedQueries": [
+     0,
+     1
+    ]
+   },
+   {
+    "index": 3,
+    "url": "https://arxiv.org/pdf/2407.08608",
+    "category": "preprint",
+    "relevance": 0.84027237,
+    "authority": 0.8,
+    "freshness": 0.19867650121323377,
+    "final": 0.729938,
+    "matchedQueries": [
+     2
+    ]
+   },
+   {
+    "index": 4,
+    "url": "https://arxiv.org/html/2407.08608v1",
+    "category": "preprint",
+    "relevance": 0.80070794,
+    "authority": 0.8,
+    "freshness": 0.1982995659269405,
+    "final": 0.710099,
+    "matchedQueries": [
+     1
+    ]
+   },
+   {
+    "index": 5,
+    "url": "https://github.com/dao-ailab/flash-attention",
+    "category": "code",
+    "relevance": 0.8396422,
+    "authority": 0.7,
+    "freshness": 0.11651843520159874,
+    "final": 0.682299,
+    "matchedQueries": [
+     0,
+     1
+    ]
+   },
+   {
+    "index": 6,
+    "url": "https://github.com/triton-lang/triton/issues/4308",
+    "category": "code",
+    "relevance": 0.6854659,
+    "authority": 0.7,
+    "freshness": 0.1982995659269405,
+    "final": 0.617478,
+    "matchedQueries": [
+     2
+    ]
+   }
+  ]
+ }
+]

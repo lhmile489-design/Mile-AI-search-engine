@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"unicode/utf16"
 
 	"github.com/lhmile489-design/mile-ai-search/internal/contract"
 	"github.com/lhmile489-design/mile-ai-search/internal/textutil"
@@ -14,9 +15,10 @@ import (
 // never from hand calculation.
 type parityFile struct {
 	Citations []struct {
-		Name    string `json:"name"`
-		Report  string `json:"report"`
-		Sources []struct {
+		Name           string    `json:"name"`
+		HighlightTexts []*string `json:"highlightTexts"`
+		Report         string    `json:"report"`
+		Sources        []struct {
 			Index   int     `json:"index"`
 			Domain  string  `json:"domain"`
 			Passage *string `json:"passage"`
@@ -89,6 +91,65 @@ func TestParseCitationsParity(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestHighlightSliceParity slices each cited passage with the Go highlight
+// offsets (UTF-16 units, as JS slice would) and compares with the text Python
+// cuts at its own offsets for the same input.
+func TestHighlightSliceParity(t *testing.T) {
+	withHL, nonASCII := 0, 0
+	for _, c := range loadParity(t).Citations {
+		passages := map[int]string{}
+		var srcs []contract.SourceCard
+		for _, s := range c.Sources {
+			idx := s.Index
+			if s.Passage != nil {
+				passages[idx] = *s.Passage
+			}
+			srcs = append(srcs, contract.SourceCard{
+				RawSource: contract.RawSource{Domain: s.Domain},
+				Index:     &idx,
+				Passage:   s.Passage,
+			})
+		}
+		cits, _ := ParseCitations(c.Report, srcs)
+		if len(cits) != len(c.HighlightTexts) {
+			t.Fatalf("%s: citations %d vs expected texts %d", c.Name, len(cits), len(c.HighlightTexts))
+		}
+		for i, ct := range cits {
+			want := c.HighlightTexts[i]
+			if ct.Highlight == nil {
+				if want != nil {
+					t.Errorf("%s[%d]: Go has no highlight, Python has %q", c.Name, i, *want)
+				}
+				continue
+			}
+			if want == nil {
+				t.Errorf("%s[%d]: Go has highlight, Python has none", c.Name, i)
+				continue
+			}
+			u := utf16.Encode([]rune(passages[ct.Index]))
+			if ct.Highlight.Start < 0 || ct.Highlight.End > len(u) || ct.Highlight.Start > ct.Highlight.End {
+				t.Errorf("%s[%d]: offsets out of range %+v len %d", c.Name, i, ct.Highlight, len(u))
+				continue
+			}
+			got := string(utf16.Decode(u[ct.Highlight.Start:ct.Highlight.End]))
+			if got != *want {
+				t.Errorf("%s[%d]: slice %q want %q", c.Name, i, got, *want)
+			}
+			withHL++
+			if len(got) != len([]rune(got)) {
+				nonASCII++
+			}
+		}
+	}
+	if withHL == 0 {
+		t.Fatal("no citation with highlight in the fixture")
+	}
+	if nonASCII == 0 {
+		t.Fatal("no CJK/emoji highlight covered")
+	}
+	t.Logf("highlights compared: %d (non-ASCII: %d)", withHL, nonASCII)
 }
 
 func TestBibtexParity(t *testing.T) {

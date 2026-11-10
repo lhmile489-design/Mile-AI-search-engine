@@ -52,6 +52,11 @@ type Config struct {
 	TavilyAPIKey Secret
 	Timeouts     Timeouts
 	RankingTopK  int
+
+	// Cache (backend/app/config.py: CACHE_ENABLED, CACHE_L2_TTL_S, CACHE_MAX_SIZE).
+	CacheEnabled bool
+	CacheTTL     time.Duration
+	CacheMaxSize int
 }
 
 const (
@@ -71,7 +76,10 @@ func Defaults() Config {
 			GenerateFirstTk: 30 * time.Second,
 			Finalize:        10 * time.Second,
 		},
-		RankingTopK: 10,
+		RankingTopK:  10,
+		CacheEnabled: true,
+		CacheTTL:     600 * time.Second,
+		CacheMaxSize: 128,
 	}
 }
 
@@ -146,6 +154,16 @@ func FromLookup(get func(string) string) Config {
 	if v := get("RANKING_TOP_K"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			c.RankingTopK = n
+		}
+	}
+	switch strings.ToLower(get("CACHE_ENABLED")) {
+	case "0", "false", "no", "off":
+		c.CacheEnabled = false
+	}
+	setSeconds(get, "CACHE_L2_TTL_S", &c.CacheTTL)
+	if v := get("CACHE_MAX_SIZE"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			c.CacheMaxSize = n
 		}
 	}
 	return c

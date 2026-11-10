@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 	"unicode/utf8"
 
+	"github.com/lhmile489-design/mile-ai-search/internal/cache"
 	"github.com/lhmile489-design/mile-ai-search/internal/config"
 	"github.com/lhmile489-design/mile-ai-search/internal/contract"
 	"github.com/lhmile489-design/mile-ai-search/internal/provider"
@@ -26,6 +28,8 @@ type Deps struct {
 	LLM       LLM
 	Providers func(engine string) (primary, fallback provider.Provider, ok bool)
 	Now       func() time.Time
+	Cache     *CacheStore   // optional L1 + L2
+	History   HistoryWriter // optional
 }
 
 var (
@@ -83,10 +87,16 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 		}
 		return true
 	}
+	var traces []contract.TracePayload
+	traceC := func(step, status, msg string, elapsed *int64, detail map[string]any, hit bool) bool {
+		tp := contract.TracePayload{
+			Step: step, Status: status, AtMs: atMs(), ElapsedMs: elapsed, Message: msg, Detail: detail, CacheHit: hit,
+		}
+		traces = append(traces, tp)
+		return emit(contract.StreamFrame{Type: "trace", Trace: &tp})
+	}
 	trace := func(step, status, msg string, elapsed *int64, detail map[string]any) bool {
-		return emit(contract.StreamFrame{Type: "trace", Trace: &contract.TracePayload{
-			Step: step, Status: status, AtMs: atMs(), ElapsedMs: elapsed, Message: msg, Detail: detail,
-		}})
+		return traceC(step, status, msg, elapsed, detail, false)
 	}
 	fail := func(code int, msg string, step *string, retry bool, upstream *string) error {
 		emit(contract.StreamFrame{Type: "error", Error: &contract.ErrorPayload{
@@ -109,6 +119,12 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 	primary, fallback, ok := d.Providers(req.Engine)
 	if !ok {
 		return fail(40002, "引擎 "+req.Engine+" 未配置密钥", nil, false, nil)
+	}
+
+	// ---- L2: replay a finished identical run ----
+	l2Key := cache.L2Key(req.Query, req.FocusMode, req.Engine, req.ScopeFilters)
+	if snap, hit := d.Cache.GetL2(l2Key); hit {
+		return replay(ctx, d, req, snap, t0, emit, stopped, func() []contract.TracePayload { return traces })
 	}
 
 	// ---- rewriting ----
@@ -144,9 +160,14 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 	failed := []int{}
 	degradedSent := false
 	degraded := false
-	plan := SearchPlan{Primary: primary, Fallback: fallback, Queries: queries, Scope: req.ScopeFilters, Timeout: d.Cfg.Timeouts.Search}
+	plan := SearchPlan{Primary: primary, Fallback: fallback, Queries: queries, Scope: req.ScopeFilters, Timeout: d.Cfg.Timeouts.Search, Cache: d.Cache, Engine: req.Engine}
+	var rawBatches []RawBatch
+	l1Hits := 0
 	canceled = SearchAll(ctx, plan, func(b Batch) bool {
 		batches = append(batches, b)
+		if b.CacheHit {
+			l1Hits++
+		}
 		if len(b.Sources) == 0 {
 			failed = append(failed, b.Index)
 			return true
@@ -166,6 +187,7 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 			raw = append(raw, RawCard(s))
 		}
 		qi := b.Index
+		rawBatches = append(rawBatches, RawBatch{Index: b.Index, Engine: b.Engine, Items: raw})
 		return emit(contract.StreamFrame{Type: "sources", Sources: &contract.SourcesPayload{
 			Phase: "raw", Engine: b.Engine, QueryIndex: &qi, Raw: raw,
 		}})
@@ -176,9 +198,9 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 	canceled = 0
 	enginesUsed := EnginesUsed(batches)
 	searchMs := time.Since(ts).Milliseconds()
-	trace("searching", "end", fmt.Sprintf("检索完成，共 %d 条（去重前）", len(all)), ip(searchMs), map[string]any{
-		"enginesUsed": enginesUsed, "rawCount": len(all), "failedQueries": failed,
-	})
+	traceC("searching", "end", fmt.Sprintf("检索完成，共 %d 条（去重前）", len(all)), ip(searchMs), map[string]any{
+		"enginesUsed": enginesUsed, "rawCount": len(all), "failedQueries": failed, "l1Hits": l1Hits,
+	}, l1Hits > 0)
 	if len(all) == 0 {
 		return fail(50201, "所有子检索词均未返回结果，请稍后重试", sp("searching"), true, sp(upstreamOf(req.Engine)))
 	}
@@ -274,11 +296,21 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 	}
 	finMs := time.Since(tf).Milliseconds()
 
-	emit(contract.StreamFrame{Type: "done", Done: &contract.DonePayload{
-		LatencyMs: atMs(),
-		StageTimings: contract.StageTimings{
-			RewritingMs: rewriteMs, SearchingMs: searchMs, ReasoningMs: reasonMs, GeneratingMs: genMs, FinalizingMs: finMs,
-		},
+	sort.Slice(rawBatches, func(i, j int) bool { return rawBatches[i].Index < rawBatches[j].Index })
+	snap := &Snapshot{
+		Queries: queries, Raw: rawBatches, Ranked: ranked, Stats: stats, Report: text,
+		Citations: cits, Takeaways: fin.Takeaways, FollowUps: fin.FollowUps, Consensus: consensus,
+		TokenStats: res.Usage, EnginesUsed: enginesUsed, Degraded: degraded, CharCount: res.Chars,
+	}
+	timings := contract.StageTimings{
+		RewritingMs: rewriteMs, SearchingMs: searchMs, ReasoningMs: reasonMs, GeneratingMs: genMs, FinalizingMs: finMs,
+	}
+	latency := atMs()
+	histID := persist(ctx, d, req, snap, runInfo{Timings: timings, LatencyMs: latency, Traces: traces})
+	doneOK := emit(contract.StreamFrame{Type: "done", Done: &contract.DonePayload{
+		HistoryID:    histID,
+		LatencyMs:    latency,
+		StageTimings: timings,
 		FirstTokenMs: firstTokenMs,
 		TokenStats:   res.Usage,
 		Citations:    cits,
@@ -290,6 +322,9 @@ func Run(ctx context.Context, d Deps, req contract.SearchRequest, send Sink) err
 		SourceCount:  len(ranked),
 		CharCount:    res.Chars,
 	}})
+	if doneOK {
+		d.Cache.SetL2(l2Key, snap) // only runs that reached done are cached
+	}
 	log.Printf("完成，总耗时 %dms，信源 %d，研报 %d 字", atMs(), len(ranked), res.Chars)
 	return nil
 }

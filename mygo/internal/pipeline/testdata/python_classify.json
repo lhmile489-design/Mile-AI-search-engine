@@ -1,0 +1,416 @@
+[
+ {
+  "domain": "arxiv.org",
+  "category": "preprint",
+  "rule": "domain:arxiv.org",
+  "authority": 0.8
+ },
+ {
+  "domain": "sub.arxiv.org",
+  "category": "preprint",
+  "rule": "domain:arxiv.org",
+  "authority": 0.8
+ },
+ {
+  "domain": "alphaxiv.org",
+  "category": "preprint",
+  "rule": "domain:alphaxiv.org",
+  "authority": 0.8
+ },
+ {
+  "domain": "sub.alphaxiv.org",
+  "category": "preprint",
+  "rule": "domain:alphaxiv.org",
+  "authority": 0.8
+ },
+ {
+  "domain": "ar5iv.labs.arxiv.org",
+  "category": "preprint",
+  "rule": "domain:arxiv.org",
+  "authority": 0.8
+ },
+ {
+  "domain": "sub.ar5iv.labs.arxiv.org",
+  "category": "preprint",
+  "rule": "domain:arxiv.org",
+  "authority": 0.8
+ },
+ {
+  "domain": "openreview.net",
+  "category": "preprint",
+  "rule": "domain:openreview.net",
+  "authority": 0.8
+ },
+ {
+  "domain": "sub.openreview.net",
+  "category": "preprint",
+  "rule": "domain:openreview.net",
+  "authority": 0.8
+ },
+ {
+  "domain": "neurips.cc",
+  "category": "preprint",
+  "rule": "domain:neurips.cc",
+  "authority": 0.8
+ },
+ {
+  "domain": "sub.neurips.cc",
+  "category": "preprint",
+  "rule": "domain:neurips.cc",
+  "authority": 0.8
+ },
+ {
+  "domain": "proceedings.neurips.cc",
+  "category": "preprint",
+  "rule": "domain:neurips.cc",
+  "authority": 0.8
+ },
+ {
+  "domain": "sub.proceedings.neurips.cc",
+  "category": "preprint",
+  "rule": "domain:neurips.cc",
+  "authority": 0.8
+ },
+ {
+  "domain": "aclanthology.org",
+  "category": "preprint",
+  "rule": "domain:aclanthology.org",
+  "authority": 0.8
+ },
+ {
+  "domain": "sub.aclanthology.org",
+  "category": "preprint",
+  "rule": "domain:aclanthology.org",
+  "authority": 0.8
+ },
+ {
+  "domain": "proceedings.mlr.press",
+  "category": "preprint",
+  "rule": "domain:proceedings.mlr.press",
+  "authority": 0.8
+ },
+ {
+  "domain": "sub.proceedings.mlr.press",
+  "category": "preprint",
+  "rule": "domain:proceedings.mlr.press",
+  "authority": 0.8
+ },
+ {
+  "domain": "github.com",
+  "category": "code",
+  "rule": "domain:github.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "sub.github.com",
+  "category": "code",
+  "rule": "domain:github.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "githubusercontent.com",
+  "category": "code",
+  "rule": "domain:githubusercontent.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "sub.githubusercontent.com",
+  "category": "code",
+  "rule": "domain:githubusercontent.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "gitlab.com",
+  "category": "code",
+  "rule": "domain:gitlab.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "sub.gitlab.com",
+  "category": "code",
+  "rule": "domain:gitlab.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "gitee.com",
+  "category": "code",
+  "rule": "domain:gitee.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "sub.gitee.com",
+  "category": "code",
+  "rule": "domain:gitee.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "gitcode.com",
+  "category": "code",
+  "rule": "domain:gitcode.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "sub.gitcode.com",
+  "category": "code",
+  "rule": "domain:gitcode.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "bitbucket.org",
+  "category": "code",
+  "rule": "domain:bitbucket.org",
+  "authority": 0.7
+ },
+ {
+  "domain": "sub.bitbucket.org",
+  "category": "code",
+  "rule": "domain:bitbucket.org",
+  "authority": 0.7
+ },
+ {
+  "domain": "pypi.org",
+  "category": "code",
+  "rule": "domain:pypi.org",
+  "authority": 0.7
+ },
+ {
+  "domain": "sub.pypi.org",
+  "category": "code",
+  "rule": "domain:pypi.org",
+  "authority": 0.7
+ },
+ {
+  "domain": "npmjs.com",
+  "category": "code",
+  "rule": "domain:npmjs.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "sub.npmjs.com",
+  "category": "code",
+  "rule": "domain:npmjs.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "rfc-editor.org",
+  "category": "spec",
+  "rule": "domain:rfc-editor.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "sub.rfc-editor.org",
+  "category": "spec",
+  "rule": "domain:rfc-editor.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "datatracker.ietf.org",
+  "category": "spec",
+  "rule": "domain:datatracker.ietf.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "sub.datatracker.ietf.org",
+  "category": "spec",
+  "rule": "domain:datatracker.ietf.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "w3.org",
+  "category": "spec",
+  "rule": "domain:w3.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "sub.w3.org",
+  "category": "spec",
+  "rule": "domain:w3.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "whatwg.org",
+  "category": "spec",
+  "rule": "domain:whatwg.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "sub.whatwg.org",
+  "category": "spec",
+  "rule": "domain:whatwg.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "ecma-international.org",
+  "category": "spec",
+  "rule": "domain:ecma-international.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "sub.ecma-international.org",
+  "category": "spec",
+  "rule": "domain:ecma-international.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "khronos.org",
+  "category": "spec",
+  "rule": "domain:khronos.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "sub.khronos.org",
+  "category": "spec",
+  "rule": "domain:khronos.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "readthedocs.io",
+  "category": "docs",
+  "rule": "domain:readthedocs.io",
+  "authority": 0.85
+ },
+ {
+  "domain": "sub.readthedocs.io",
+  "category": "docs",
+  "rule": "domain:readthedocs.io",
+  "authority": 0.85
+ },
+ {
+  "domain": "developer.mozilla.org",
+  "category": "docs",
+  "rule": "domain:developer.mozilla.org",
+  "authority": 0.85
+ },
+ {
+  "domain": "sub.developer.mozilla.org",
+  "category": "docs",
+  "rule": "domain:developer.mozilla.org",
+  "authority": 0.85
+ },
+ {
+  "domain": "learn.microsoft.com",
+  "category": "docs",
+  "rule": "domain:learn.microsoft.com",
+  "authority": 0.85
+ },
+ {
+  "domain": "sub.learn.microsoft.com",
+  "category": "docs",
+  "rule": "domain:learn.microsoft.com",
+  "authority": 0.85
+ },
+ {
+  "domain": "docs.python.org",
+  "category": "docs",
+  "rule": "domain:docs.python.org",
+  "authority": 0.85
+ },
+ {
+  "domain": "sub.docs.python.org",
+  "category": "docs",
+  "rule": "domain:docs.python.org",
+  "authority": 0.85
+ },
+ {
+  "domain": "docs.example.com",
+  "category": "docs",
+  "rule": "host-prefix:docs.",
+  "authority": 0.85
+ },
+ {
+  "domain": "docs.rs",
+  "category": "docs",
+  "rule": "host-prefix:docs.",
+  "authority": 0.85
+ },
+ {
+  "domain": "docs.python.org",
+  "category": "docs",
+  "rule": "domain:docs.python.org",
+  "authority": 0.85
+ },
+ {
+  "domain": "foo.readthedocs.io",
+  "category": "docs",
+  "rule": "domain:readthedocs.io",
+  "authority": 0.85
+ },
+ {
+  "domain": "notgithub.com",
+  "category": "blog",
+  "rule": "default",
+  "authority": 0.5
+ },
+ {
+  "domain": "github.com.evil.example",
+  "category": "blog",
+  "rule": "default",
+  "authority": 0.5
+ },
+ {
+  "domain": "evilarxiv.org",
+  "category": "blog",
+  "rule": "default",
+  "authority": 0.5
+ },
+ {
+  "domain": "blog.example.com",
+  "category": "blog",
+  "rule": "default",
+  "authority": 0.5
+ },
+ {
+  "domain": "medium.com",
+  "category": "blog",
+  "rule": "default",
+  "authority": 0.5
+ },
+ {
+  "domain": "zhihu.com",
+  "category": "blog",
+  "rule": "default",
+  "authority": 0.5
+ },
+ {
+  "domain": "youtube.com",
+  "category": "blog",
+  "rule": "default",
+  "authority": 0.5
+ },
+ {
+  "domain": "pytorch.org",
+  "category": "blog",
+  "rule": "default",
+  "authority": 0.5
+ },
+ {
+  "domain": "tridao.me",
+  "category": "blog",
+  "rule": "default",
+  "authority": 0.5
+ },
+ {
+  "domain": "export.arxiv.org",
+  "category": "preprint",
+  "rule": "domain:arxiv.org",
+  "authority": 0.8
+ },
+ {
+  "domain": "raw.githubusercontent.com",
+  "category": "code",
+  "rule": "domain:githubusercontent.com",
+  "authority": 0.7
+ },
+ {
+  "domain": "mirrors.w3.org",
+  "category": "spec",
+  "rule": "domain:w3.org",
+  "authority": 0.9
+ },
+ {
+  "domain": "",
+  "category": "blog",
+  "rule": "default",
+  "authority": 0.5
+ }
+]

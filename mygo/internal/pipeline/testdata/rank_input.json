@@ -1,0 +1,572 @@
+[
+  {
+    "ID": "src_4b70742f7f39",
+    "Title": "FlashAttention-3：基于异步和低精度的快速且高精度 Attention – PyTorch - PyTorch 框架",
+    "URL": "https://pytorch.ac.cn/blog/flashattention-3",
+    "Domain": "pytorch.ac.cn",
+    "FaviconURL": "https://pytorch.ac.cn/wp-content/uploads/2024/10/cropped-favicon-32x32.webp",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2024-07-11T00:00:00Z",
+    "RawScore": 0.8682137,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "对于 FP8，我们可以达到接近 1.2 PFLOPS 的性能！\n\n## 讨论\n\n这篇博文重点介绍了 Hopper GPU 上可用于 FlashAttention 的一些优化。其他优化（例如，可变长度序列、持久核函数 persistent kernel，以及用于 FP8 的内核中转置 in-kernel transpose）已在论文中进行了探讨。\n\n我们已经看到，设计能够充分利用其运行硬件的算法可以带来显著的效率提升，并解锁诸如长上下文等新的模型能力。我们期待未来在 LLM 推理优化方面的工作，以及将我们的技术推广到其他硬件架构上。\n\n我们也期待 FlashAttention-3 能够在未来的 PyTorch 版本中完成集成。\n\n## 备注\n\n1. 在不使用 wgmma 指令的情况下，旧的 mma.sync 指令只能达到 Hopper Tensor Core 峰值吞吐量的大约 ⅔： ↩\n2. CUDA 编程指南指出，特殊函数的吞吐量为每个流式多处理器（SM）每个时钟周期 16 次操作。我们将 16 乘以 132 个 SM 和 1830 Mhz（用于计算 FP16 矩阵乘法 989 TFLOPS 的时钟频率），得出 3.9 TFLOPS ↩\n\n### 文档\n\n获取 PyTorch 的全面开发者文档\n\n查看文档 ›\n\n### 教程\n\n获取面向初学者和高级开发者的深度教程\n\n查看教程 ›\n\n### 资源\n\n寻找开发资源并解答您的问题\n\n查看资源 ›\n\n## 保持联系 以获取更新、活动信息和最新动态\n\n通过提交此表格，我同意接收来自 LF 及其项目关于其活动、培训、研究、开发和相关公告的营销电子邮件。我理解我可以随时使用我收到的电子邮件页脚中的链接取消订阅。隐私政策。 [...] 1. WGMMA（Warpgroup 矩阵乘累加）。这一新特性利用了 Hopper 上新的 Tensor Core，其吞吐量1 远高于 Ampere 中旧的 mma.sync 指令（图片来自 H100 白皮书）。\n\n2. TMA（张量内存加速器）。这是一个特殊的硬件单元，用于加速全局内存和共享内存之间的数据传输，负责处理所有的索引计算和越界断定（out-of-bound predication）。这释放了寄存器，对于增加分块大小（tile size）和提高效率来说，寄存器是非常宝贵的资源。\n\n3. FP8 低精度。这使 Tensor Core 的吞吐量翻倍（例如，FP16 时为 989 TFLOPS，而 FP8 时为 1978 TFLOPS），但由于使用更少的位数来表示浮点数，这会在精度上做出妥协。\n\nFlashAttention-3 利用了 Hopper 的所有这些新特性，使用了来自 NVIDIA CUTLASS 库的强大抽象。  \n  \n通过重写 FlashAttention 以使用这些新特性，我们已经可以显著提高其运行速度（例如，在前向传播中，FP16 从 FlashAttention-2 的 350 TFLOPS 提升到约 540-570 TFLOPS）。然而，Hopper 上新指令（WGMMA 和 TMA）的异步性质开辟了更多的算法机会来重叠操作，从而榨取更高的性能。在这篇博文中，我们将解释两项专门针对注意力机制的此类技术。至于线程束特化（warp specialization）的通用技术（使用独立的生产者和消费者线程束分别进行 TMA 和 WGMMA），在 GEMM 上下文中已经有 很好的介绍，在此处的工作原理也相同。\n\n## 异步：重叠 GEMM 和 Softmax\n\n为什么要重叠？ [...] 我们很高兴发布集成了这些技术的 FlashAttention-3。在使用 FP16 时，它比 FlashAttention-2 快 1.5 到 2.0 倍，可达 740 TFLOPS，即 H100 理论最大 FLOPS 的 75% 利用率。在使用 FP8 时，FlashAttention-3 接近 1.2 PFLOPS，且误差比基线 FP8 注意力机制小 2.6 倍。\n\nFlashAttention-3 获取地址：   \n论文\n\n## FlashAttention 回顾\n\nFlashAttention 是一种重构注意力计算的算法，它利用分块（tiling）和重计算（recomputation）来显著提高计算速度，并将内存占用从序列长度的二次方降低到线性。我们使用分块技术将输入块从 HBM（GPU 显存）加载到 SRAM（高速缓存）中，针对该块执行注意力计算，并在 HBM 中更新输出。通过避免将巨大的中间注意力矩阵写入 HBM，我们减少了内存读写的次数，从而带来了 2-4 倍的实际运行时间（wall-clock time）加速。\n\n在此我们展示了 FlashAttention 前向传播的示意图：通过分块和 softmax 重新缩放（rescaling），我们按分块进行操作，避免了从 HBM 进行读写，同时在不进行任何近似的情况下获得正确的输出。\n\n## Hopper GPU 上的新硬件特性 – WGMMA、TMA、FP8\n\n虽然 FlashAttention-2 在 Ampere (A100) GPU 上可以达到高达 70% 的理论最大 FLOPS，但它尚未利用 Hopper GPU 的新特性来最大化性能。我们在此介绍一些 Hopper 特有的新特性，以及它们为什么如此重要。",
+    "MatchedQueries": [
+      0
+    ]
+  },
+  {
+    "ID": "src_0eddbd8a9c3a",
+    "Title": "Understanding FlashAttention-3 on NVIDIA Hopper | Onyx",
+    "URL": "https://www.onyxgs.com/blog/understanding-flashattention-3-nvidia-hopper",
+    "Domain": "onyxgs.com",
+    "FaviconURL": "https://www.onyxgs.com/favicon.ico",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": null,
+    "RawScore": 0.8296166,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Real-World Performance Implications\n\nThe architectural optimizations in FlashAttention-3 provide a massive jump in real-world performance. On NVIDIA H100 GPUs, FlashAttention-3 achieves up to 1.2 PetaFLOPs in FP8 precision. This represents roughly 75% of the theoretical maximum performance of the physical silicon.\n\nFor developers deploying models with long context windows (such as document analysis or multi-turn conversational agents), this hardware-aligned optimization translates directly to lower latency and significantly higher throughput per GPU. Rather than waiting for faster chips, optimizing the software to match the asynchronous, low-precision reality of modern silicon is how we achieve the next order of magnitude in performance.\n\nBack to Main   |  Share [...] This asynchronous handoff ensures that data movement and mathematical computation happen at the exact same time. The latency of reading from HBM is effectively hidden behind the execution time of the previous attention block.\n\nLeveraging FP8 and WGMMA Instructions\n\nOperating at lower precision is one of the most effective ways to speed up model execution, but it introduces major numerical stability challenges. FlashAttention-3 natively supports FP8 (8-bit floating-point) precision, which cuts the memory footprint of the KV cache in half compared to FP16. [...] The original FlashAttention algorithm resolved a massive portion of this overhead by tiling: loading blocks of data into the GPU's fast, local Static RAM (SRAM), computing attention locally, and writing only the final output back to HBM. FlashAttention-2 optimized this further by tuning work distribution among the GPU's warp schedulers. However, modern silicon like the NVIDIA Hopper architecture (H100) introduced new physical capabilities that required a complete rethink of how software interacts with hardware. FlashAttention-3 adapts directly to these microarchitectural shifts, unlocking near-theoretical maximum speeds on Hopper GPUs.\n\nThe Bottleneck: Waiting on High-Bandwidth Memory",
+    "MatchedQueries": [
+      0
+    ]
+  },
+  {
+    "ID": "src_8f254bbcf7e7",
+    "Title": "FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision博客翻译",
+    "URL": "https://zhuanlan.zhihu.com/p/708409249",
+    "Domain": "zhuanlan.zhihu.com",
+    "FaviconURL": "https://static.zhihu.com/heifetz/assets/apple-touch-icon-152.81060cab.png",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": null,
+    "RawScore": 0.81979275,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Image 1)\n\nImage 2: ZhiHu logo\n\n的时间内每个注意头中执行，而不是O(d^2)的时间，其中d是头维度。由于哈达玛变换受到内存带宽的限制，它可以与之前的操作（如旋转嵌入，也受内存带宽限制）“免费”融合。\n\n在我们的实验中，Q、K、V从标准正态分布生成，但有0.1%的条目具有较大的幅度（模拟异常值），我们发现不相关处理可以将量化误差减少2.6倍。请参见下表中的数值误差比较。详细信息请参阅论文。\n\nImage 13\n\n## Attention Benchmark\n\n我们展示了一些FlashAttention-3的结果，并将其与FlashAttention-2以及Triton和cuDNN的实现进行了比较（这两者已经使用了Hopper GPU的新硬件特性）。\n\n对于FP16，我们看到与FlashAttention-2相比约有1.6倍至2.0倍的加速。\n\nImage 14\n\nImage 15\n\nImage 16\n\n对于FP8，我们可以达到接近1.2 PFLOPS！\n\nImage 17\n\n## Discussion\n\n本博文重点介绍了Hopper GPU上可用的FlashAttention的一些优化。其他优化（例如，可变长度序列，持久性内核以及用于FP8的内核转置）在论文中有涵盖。\n\n我们已经看到，设计算法以充分利用其运行的硬件可以带来显著的效率提升，并解锁新的模型功能，如长上下文。我们期待未来对LLM推理的优化工作，以及将我们的技术推广到其他硬件架构。我们也期待FlashAttention-3被集成到PyTorch的未来版本中。\n\n编辑于 2024-07-12 02:51・上海\n\n大模型训练",
+    "MatchedQueries": [
+      0
+    ]
+  },
+  {
+    "ID": "src_d57940ebdad0",
+    "Title": "FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision – PyTorch",
+    "URL": "https://pytorch.org/blog/flashattention-3",
+    "Domain": "pytorch.org",
+    "FaviconURL": "https://pytorch.org/wp-content/uploads/2024/10/cropped-favicon-180x180.webp",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2024-07-11T00:00:00Z",
+    "RawScore": 0.7938904,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "For FP8, we can reach close to 1.2 PFLOPS!\n\n## Discussion\n\nThis blogpost highlights some of the optimizations for FlashAttention available on Hopper GPUs. Other optimizations (e.g., variable length sequences, persistent kernel, and in-kernel transpose for FP8) are covered in the paper.\n\nWe have seen that designing algorithms that take advantage of the hardware they run on can bring significant efficiency gains and unlock new model capabilities such as long context. We look forward to future work on optimization for LLM inference, as well as generalizing our techniques to other hardware architectures.\n\nWe also look forward to FlashAttention-3 being integrated in a future release of PyTorch.\n\n## Notes [...] ## New hardware features on Hopper GPUs – WGMMA, TMA, FP8\n\nWhile FlashAttention-2 can achieve up to 70% theoretical max FLOPS on Ampere (A100) GPUs, it does not yet take advantage of new features on Hopper GPUs to maximize performance. We describe some of the new Hopper-specific features here, and why they are important.\n\n1. WGMMA (Warpgroup Matrix Multiply-Accumulate). This new feature makes use of the new Tensor Cores on Hopper, with much higher throughput1 than the older mma.sync instruction in Ampere (image from the H100 white paper). [...] three main techniques to speed up attention on Hopper GPUs: exploiting asynchrony of the Tensor Cores and TMA to (1) overlap overall computation and data movement via warp-specialization and (2) interleave block-wise matmul and softmax operations, and (3) incoherent processing that leverages hardware support for FP8 low-precision.",
+    "MatchedQueries": [
+      0
+    ]
+  },
+  {
+    "ID": "src_b63294479d6a",
+    "Title": "FlashAttention - 3的算法在GPU硬件特性下是如何优化的？",
+    "URL": "https://docs.feishu.cn/v/wiki/EBPnwBiVoiQZvFkU3MAcLNkHnbh/ab",
+    "Domain": "docs.feishu.cn",
+    "FaviconURL": "https://p1-hera.byteimg.com/tos-cn-i-jbbdkfciu3/1eec3176b81146b9b303b9c626b99963~tplv-jbbdkfciu3-image:0:0.image",
+    "Engine": "tavily",
+    "Category": "docs",
+    "CategorySource": "rule",
+    "PublishedAt": null,
+    "RawScore": 0.77137923,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "我们证明了我们的方法FlashAttention-3在H100 GPUs上实现了1.5-2.0倍的加速，FP16达到740 TFLOPs/s（75%利用率），FP8接近1.2 PFLOPs/s。我们验证了FP8 FlashAttention-3比",
+    "MatchedQueries": [
+      0
+    ]
+  },
+  {
+    "ID": "src_af3ccf67ff72",
+    "Title": "新一代的 FlashAttention - NVIDIA 技术博客",
+    "URL": "https://developer.nvidia.cn/blog/next-generation-of-flashattention",
+    "Domain": "developer.nvidia.cn",
+    "FaviconURL": "https://dz4-assets-prod.svc.nvidia.com/v3-4-0/assets/favicon-81bff16cada05fcff11e5711f7e6212bdc2e0a32ee57cd640a8cf66c87a6cbe6.ico",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2024-07-11T05:53:33Z",
+    "RawScore": 0.76596165,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Related Resources\n\n智能体/生成式 AI\n\n# 新一代的 FlashAttention\n\n2024年 7月 11日\n\n作者：Vijay Thakkar 和 Fred Oh\n\n W\n W\n Email\n\nNVIDIA 很高兴能与 Colfax、Together.ai、Meta 和普林斯顿大学合作，利用 Hopper GPU 架构和 Tensor Core，加速关键的融合注意力内核，使用 CUTLASS 3。\n\nFlashAttention-3 采用关键技术，相比使用 FP16 的 FlashAttention-2，性能提升 1.5–2.0 倍，最高可达 740 TFLOPS。另外，在使用 FP8 时，FlashAttention-3 可达到高达 1.2 PFLOPS，且误差比基准 FP8 注意力小 2.6 倍。\n\nCUTLASS 是一个开源 CUDA 库，旨在支持深度学习和 HPC 从业者在 NVIDIA Tensor Core GPU 上实现高速性能，涵盖自定义算法和研究、生产工作负载等多种场景。\n\n有关协作的更多信息，请参阅 FlashAttention-3：快速准确的注意力与异步技术和低精度帖子，以及 研究论文。\n\n## 标签\n\n智能体/生成式 AI\n\n## 关于作者\n\nVijay Thakkar 是 NVIDIA 的高级计算架构师，也是 CUTLASS 3 的主要作者。除了在 CUTLASS 方面的工作之外，他还参与了 GPU 架构、编译器和 CUDA 工程团队的 Tensor Core 架构、PTX 曝光和编程模型的开发。\n\n查看 Vijay Thakkar 所有文章",
+    "MatchedQueries": [
+      0
+    ]
+  },
+  {
+    "ID": "src_a61e813068be",
+    "Title": "FlashAttention-3 Guide: Architecture, Hopper TMA \u0026 FP8 Benchmarks",
+    "URL": "https://pristren.com/blog/flashattention-3-algorithm-guide",
+    "Domain": "pristren.com",
+    "FaviconURL": "https://pristren.com/apple-touch-icon.png",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2026-03-19T00:00:00Z",
+    "RawScore": 0.76152116,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "FlashAttention-3 interleaves the softmax exponent calculations of step $t$ directly inside the memory-latency gaps of the WGMMA matrix multiplication of step $t+1$, achieving near-continuous Tensor Core saturation.\n\n## 3. Low-Precision FP8 Attention: Doubling Throughput\n\nWhile FlashAttention-2 supported FP16 and BF16, FlashAttention-3 introduces native support for 8-bit floating-point (FP8) representations:\n\n E4M3 (4 bits exponent, 3 bits mantissa): Used for weights and activation tiles where dynamic range is moderate but precision is paramount.\n E5M2 (5 bits exponent, 2 bits mantissa): Used where wider dynamic range is required.\n\n### Overcoming FP8 Quantization Noise\n\nMultiplying two FP8 matrices can quickly cause numerical underflow or overflow in attention logits: [...] The progression of exact attention algorithms has systematically conquered this memory wall:\n\n1. FlashAttention-1 (2022): Introduced tiling and online softmax, allowing attention to be computed block-by-block directly inside ultra-fast on-chip SRAM without ever writing the $N \\times N$ matrix to HBM.\n2. FlashAttention-2 (2023): Parallelized execution across the sequence length dimension and streamlined online softmax scaling to achieve up to 73% of theoretical A100 GPU compute throughput.\n3. FlashAttention-3 (2024 - 2026): Completely reimagines execution for modern NVIDIA Hopper (H100/H200) architecture, unlocking up to 75% - 85% of theoretical Hopper FLOPS (surpassing 1.2 PFLOPS in FP8) by exploiting asynchronous hardware tensor instructions and warp specialization. [...] | Sequence Length | Precision | FA2 Speed (TFLOPS) | FA3 Speed (TFLOPS) | Relative Speedup |\n ---  --- \n| 8k tokens | BF16 | 320 TFLOPS | 580 TFLOPS | 1.81x |\n| 16k tokens | BF16 | 340 TFLOPS | 620 TFLOPS | 1.82x |\n| 32k tokens | BF16 | 350 TFLOPS | 650 TFLOPS | 1.86x |\n| 64k tokens | BF16 | 355 TFLOPS | 670 TFLOPS | 1.89x |\n| 16k tokens | FP8 | N/A | 1,180 TFLOPS | ~3.4x vs FA2 BF16 |\n\nAcross all sequence lengths from 8k to 128k tokens, FlashAttention-3 consistently sustains 1.8x to 2.0x the speed of FlashAttention-2 in BF16, and over 3x speedup when leveraging native FP8.\n\n## 5. Production Integration with PyTorch\n\nFlashAttention-3 is designed as a drop-in acceleration primitive within PyTorch workflows:\n\n### Installation\n\nbash",
+    "MatchedQueries": [
+      0
+    ]
+  },
+  {
+    "ID": "src_53d2a47e7517",
+    "Title": "FP8 compute path not active in FlashAttention-3 on Hopper? · Issue #1848 · Dao-AILab/flash-attention · GitHub",
+    "URL": "https://github.com/Dao-AILab/flash-attention/issues/1848",
+    "Domain": "github.com",
+    "FaviconURL": "https://github.githubassets.com/favicons/favicon.png",
+    "Engine": "tavily",
+    "Category": "code",
+    "CategorySource": "rule",
+    "PublishedAt": "2025-08-27T00:00:00Z",
+    "RawScore": 0.7498395,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "isratnisa\n\nopened on Aug 27, 2025\n\nIssue body actions\n\nI am running precision benchmarks with FP8(`torch.float8_e4m3fn`) using FalshAttention-3 on Hopper. My Q, K, and V inputs are quantized to FP8 and passed through `flash_attn_func` (from `../hopper/flash_attn_interface.py`). However, I don’t think the true FP8 compute path is being used:\n\n1. From the Nsight Systems profile I do see `cutlass::float_e4m3_t` in the kernel symbol (full demangled function header below), but in the SASS dump I only see `HMMA.16816.F32.BF16` instructions — no FP8 variants (`E4M3` / `E5M2`).\n2. Throughput increased only ~100 TFLOPs compared to BF16, which looks more like a memory-bandwidth saving from FP8 storage, not a switch to native FP8 compute. [...] This makes me suspect my build is falling back to FP8 storage + BF16 compute rather than the Hopper FP8 WGMMA path.\n\nQuestion: How can I ensure FlashAttention-3 actually takes the FP8 compute path on Hopper GPUs? Do I need a specific CUTLASS version, compiler flag, or kernel dispatch setting to activate native FP8 WGMMA kernels?\n\nFull function header: [...] Full function header:\n\n```\nvoid cutlass::device_kernel, cute::C\u003c(int)1\u003e, cute::C\u003c(int)1\u003e\u003e, cute::tuple, cute::C\u003c(int)160\u003e, cute::C\u003c(int)64\u003e\u003e, (int)64, cutlass::float_e4m3_t, float, cutlass::arch::Sm90, (bool)0, (bool)0, (bool)0, (bool)0, (bool)0, (bool)0, (bool)0, (bool)1, (bool)1, (bool)0, (bool)0, (bool)0\u003e, flash::CollectiveEpilogueFwd, cute::C\u003c(int)64\u003e, cute::C\u003c(int)160\u003e\u003e, cute::tuple, cute::C\u003c(int)1\u003e, cute::C\u003c(int)1\u003e\u003e, cutlass::bfloat16_t, cutlass::arch::Sm90, (int)384, (bool)0, (bool)0, (bool)0, (bool)1\u003e, flash::StaticPersistentTileScheduler\u003c(bool)0\u003e\u003e\u003e\u003e(T1::Params) \n```\n\nReactions are currently unavailable\n\n#### No activity\n\nActivity on this issue will appear here.\n\n## Activity\n\nSign up for free to join this conversation on GitHub. Already have an account? Sign in to comment",
+    "MatchedQueries": [
+      0
+    ]
+  },
+  {
+    "ID": "src_bb2ba5cfd07c",
+    "Title": "GitHub - Dao-AILab/flash-attention: Fast and memory-efficient exact attention · GitHub",
+    "URL": "https://github.com/dao-ailab/flash-attention",
+    "Domain": "github.com",
+    "FaviconURL": "https://github.githubassets.com/favicons/favicon.png",
+    "Engine": "tavily",
+    "Category": "code",
+    "CategorySource": "rule",
+    "PublishedAt": "2023-10-05T00:00:00Z",
+    "RawScore": 0.73868835,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "FlashAttention and FlashAttention-2 are free to use and modify (see LICENSE). Please cite and credit FlashAttention if you use it.\n\n## FlashAttention-3 beta release\n\nFlashAttention-3 is optimized for Hopper GPUs (e.g. H100).\n\nBlogpost: \n\nPaper: \n\nThis is a beta release for testing / benchmarking before we integrate that with the rest of the repo.\n\nCurrently released:\n\n FP16 / BF16 forward and backward, FP8 forward\n\nRequirements: H100 / H800 GPU, CUDA \u003e= 12.3.\n\nWe highly recommend CUDA 12.8 for best performance.\n\nTo install:\n\n```\ncd\n```\n\nTo run the test:\n\n```\nexport $PWD\n```\n\nOnce the package is installed, you can import it as follows:\n\n```\nfrom flash_attn_3 import flash_attn_interface flash_attn_interface flash_attn_func\n```\n\nTo install using `uv`, in your `pyproject.toml`:",
+    "MatchedQueries": [
+      0
+    ]
+  },
+  {
+    "ID": "src_73ec1a93f1ca",
+    "Title": "FlashAttention-3: Fast and Accurate Attention with ...",
+    "URL": "https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf",
+    "Domain": "proceedings.neurips.cc",
+    "FaviconURL": "https://proceedings.neurips.cc/favicon.ico",
+    "Engine": "tavily",
+    "Category": "preprint",
+    "CategorySource": "rule",
+    "PublishedAt": null,
+    "RawScore": 0.72231215,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "achieving only 35% utilization on the H100 GPU. We develop three main techniques to speed up attention on Hopper GPUs: exploiting asynchrony of the Tensor Cores and TMA to (1) overlap overall computation and data movement via warp-specialization and (2) interleave block-wise matmul and softmax operations, and (3) block quantization and incoherent processing that leverages hardware support for FP8 low-precision. We demonstrate that our method, FLASHATTENTION-3, achieves speedup on H100 GPUs by 1.5-2.0× with BF16 reaching up to 840 TFLOPs/s (85% utilization), and with FP8 reaching 1.3 PFLOPs/s. We validate that FP8 FLASHATTENTION-3 achieves 2.6× lower numerical error than a baseline FP8 attention. [...] Low-precision number formats: Modern GPUs have specialized hardware units for accelerating low-precision computation. For example, the WGMMA instruction can target the FP8 Tensor Cores on Hopper to deliver 2x the throughput per SM when compared to FP16 or BF16.\n4Luo et al.  reports shared memory bandwidth of 128 bytes per clock cycle per SM, and we multiply that by 132 SMs and the boost clock of 1830 MHz. [...] We are able to speed up attention by 1.5-2.0× times compared to FLASHATTENTION-2, and reduce FP8 numerical error by 2.6× compared to standard per-tensor quantization. Some limitations of our work that we hope to address in the future include: optimizing for LLM inference, and understanding the effects of low-precision attention in large-scale training.\nThough we have focused on Hopper GPUs in this work, we expect that the techniques developed here will apply to other hardware accelerators. We hope that a faster and more accurate primitive such as attention will unlock new applications in long-context tasks.",
+    "MatchedQueries": [
+      0
+    ]
+  },
+  {
+    "ID": "src_a61e813068be",
+    "Title": "FlashAttention-3 Guide: Architecture, Hopper TMA \u0026 FP8 Benchmarks",
+    "URL": "https://pristren.com/blog/flashattention-3-algorithm-guide",
+    "Domain": "pristren.com",
+    "FaviconURL": "https://pristren.com/apple-touch-icon.png",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2026-03-19T00:00:00Z",
+    "RawScore": 0.8783249,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "| Sequence Length | Precision | FA2 Speed (TFLOPS) | FA3 Speed (TFLOPS) | Relative Speedup |\n ---  --- \n| 8k tokens | BF16 | 320 TFLOPS | 580 TFLOPS | 1.81x |\n| 16k tokens | BF16 | 340 TFLOPS | 620 TFLOPS | 1.82x |\n| 32k tokens | BF16 | 350 TFLOPS | 650 TFLOPS | 1.86x |\n| 64k tokens | BF16 | 355 TFLOPS | 670 TFLOPS | 1.89x |\n| 16k tokens | FP8 | N/A | 1,180 TFLOPS | ~3.4x vs FA2 BF16 |\n\nAcross all sequence lengths from 8k to 128k tokens, FlashAttention-3 consistently sustains 1.8x to 2.0x the speed of FlashAttention-2 in BF16, and over 3x speedup when leveraging native FP8.\n\n## 5. Production Integration with PyTorch\n\nFlashAttention-3 is designed as a drop-in acceleration primitive within PyTorch workflows:\n\n### Installation\n\nbash [...] FlashAttention-3 interleaves the softmax exponent calculations of step $t$ directly inside the memory-latency gaps of the WGMMA matrix multiplication of step $t+1$, achieving near-continuous Tensor Core saturation.\n\n## 3. Low-Precision FP8 Attention: Doubling Throughput\n\nWhile FlashAttention-2 supported FP16 and BF16, FlashAttention-3 introduces native support for 8-bit floating-point (FP8) representations:\n\n E4M3 (4 bits exponent, 3 bits mantissa): Used for weights and activation tiles where dynamic range is moderate but precision is paramount.\n E5M2 (5 bits exponent, 2 bits mantissa): Used where wider dynamic range is required.\n\n### Overcoming FP8 Quantization Noise\n\nMultiplying two FP8 matrices can quickly cause numerical underflow or overflow in attention logits: [...] FlashAttention-3 implements block-wise scaling (per-tile quantization), dynamically scaling tensor tiles before WGMMA execution and rescale-accumulating inside FP32 registers.\n This allows models to achieve up to 1.2 PFLOPS on a single H100 GPU with virtually indistinguishable perplexity degradation compared to BF16 baselines.\n\n## 4. Empirical Benchmarks: FA2 vs. FA3 on NVIDIA H100\n\nExtensive benchmarks across long context windows demonstrate FlashAttention-3's performance multiplier over FlashAttention-2 and standard PyTorch Scaled Dot-Product Attention (SDPA):",
+    "MatchedQueries": [
+      1
+    ]
+  },
+  {
+    "ID": "src_53d2a47e7517",
+    "Title": "FP8 compute path not active in FlashAttention-3 on Hopper? · Issue #1848 · Dao-AILab/flash-attention · GitHub",
+    "URL": "https://github.com/Dao-AILab/flash-attention/issues/1848",
+    "Domain": "github.com",
+    "FaviconURL": "https://github.githubassets.com/favicons/favicon.png",
+    "Engine": "tavily",
+    "Category": "code",
+    "CategorySource": "rule",
+    "PublishedAt": "2025-08-27T00:00:00Z",
+    "RawScore": 0.8473754,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "isratnisa\n\nopened on Aug 27, 2025\n\nIssue body actions\n\nI am running precision benchmarks with FP8(`torch.float8_e4m3fn`) using FalshAttention-3 on Hopper. My Q, K, and V inputs are quantized to FP8 and passed through `flash_attn_func` (from `../hopper/flash_attn_interface.py`). However, I don’t think the true FP8 compute path is being used:\n\n1. From the Nsight Systems profile I do see `cutlass::float_e4m3_t` in the kernel symbol (full demangled function header below), but in the SASS dump I only see `HMMA.16816.F32.BF16` instructions — no FP8 variants (`E4M3` / `E5M2`).\n2. Throughput increased only ~100 TFLOPs compared to BF16, which looks more like a memory-bandwidth saving from FP8 storage, not a switch to native FP8 compute.",
+    "MatchedQueries": [
+      1
+    ]
+  },
+  {
+    "ID": "src_47962fb454db",
+    "Title": "FlashAttention-3 — Faster Attention on Hopper",
+    "URL": "https://yobitel.com/knowledge-base/flash-attention-3",
+    "Domain": "yobitel.com",
+    "FaviconURL": "https://yobitel.com/apple-icon.png?apple-icon.0jhxsz04jon_i.png",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2026-07-10T00:00:00Z",
+    "RawScore": 0.8415267,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Third-generation Flash Attention from Tri Dao's group at Princeton / Together AI, released July 2024 (Shah et al., arXiv:2407.08608). BSD-3-Clause licensed; hosted at github.com/Dao-AILab/flash-attention.\n Targets the Hopper architecture specifically — uses Tensor Memory Accelerator (TMA), warp-specialised producer/consumer pipelining, ping-pong scheduling of the two matmuls around softmax, and FP8 quantisation with incoherent (Hadamard) preprocessing to reach ~75 percent of theoretical peak on H100.\n Roughly 1.5-2x faster than Flash Attention 2 on H100 for typical training and inference-prefill attention shapes; FP8 variant doubles that again at near-BF16 quality for standard LLM benchmarks. [...] H100 SXM5 BF16 tensor-core peak is 989 TFLOPS; FA3 hits ~75 percent at long sequences (740 / 989).\n H100 FP8 tensor-core peak is 1979 TFLOPS; FA3 FP8 hits ~67-68 percent.\n Head\\_dim 64 is ~10 percent slower than 128 (more iterations per token); head\\_dim 256 is ~5 percent slower (register pressure).\n Sliding window adds ~3-5 percent overhead vs full causal at the same length.\n Varlen packed sequences add ~5 percent overhead vs uniform-length, but win on batch utilisation.\n On H200, throughput rises ~10-15 percent versus H100 because HBM bandwidth lifts memory-bound regions.\n On B200, FA3 is superseded by a Blackwell-tuned variant in the same upstream repo; expect another 1.5-2x on BF16 and 2-2.5x on FP4/FP8. [...] Training·Advanced\n\n# Flash Attention 3\n\nHopper-optimised attention kernel — ~75 percent of H100 peak FP8 FLOPS, the gold standard for transformer training and inference kernels.\n\n22 min readUpdated 10 July 2026\n\nTL;DR",
+    "MatchedQueries": [
+      1
+    ]
+  },
+  {
+    "ID": "src_bb2ba5cfd07c",
+    "Title": "GitHub - Dao-AILab/flash-attention: Fast and memory-efficient exact attention · GitHub",
+    "URL": "https://github.com/dao-ailab/flash-attention",
+    "Domain": "github.com",
+    "FaviconURL": "https://github.githubassets.com/favicons/favicon.png",
+    "Engine": "tavily",
+    "Category": "code",
+    "CategorySource": "rule",
+    "PublishedAt": "2023-10-05T00:00:00Z",
+    "RawScore": 0.8396422,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "FlashAttention and FlashAttention-2 are free to use and modify (see LICENSE). Please cite and credit FlashAttention if you use it.\n\n## FlashAttention-3 beta release\n\nFlashAttention-3 is optimized for Hopper GPUs (e.g. H100).\n\nBlogpost: \n\nPaper: \n\nThis is a beta release for testing / benchmarking before we integrate that with the rest of the repo.\n\nCurrently released:\n\n FP16 / BF16 forward and backward, FP8 forward\n\nRequirements: H100 / H800 GPU, CUDA \u003e= 12.3.\n\nWe highly recommend CUDA 12.8 for best performance.\n\nTo install:\n\n```\ncd\n```\n\nTo run the test:\n\n```\nexport $PWD\n```\n\nOnce the package is installed, you can import it as follows:\n\n```\nfrom flash_attn_3 import flash_attn_interface flash_attn_interface flash_attn_func\n```\n\nTo install using `uv`, in your `pyproject.toml`:",
+    "MatchedQueries": [
+      1
+    ]
+  },
+  {
+    "ID": "src_8dc60b67e5f7",
+    "Title": "Aman's AI Journal • Primers • FlashAttention",
+    "URL": "https://aman.ai/primers/ai/flashattention",
+    "Domain": "aman.ai",
+    "FaviconURL": "https://aman.ai/favicon.jpg",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2025-07-26T00:00:00Z",
+    "RawScore": 0.8156003,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "### Summary\n\n FlashAttention‑3 fully exploits Hopper hardware features (asynchrony, TMA, low‑precision support).\n Achieves ~1.5–2.0x speedups over FlashAttention‑2 and up to 1.3PFLOPs/s using FP8, with much improved numerical error.\n Combines warp‑specialization, pipelined overlap, and block quantization for superior architectural and performance gains.\n\n## Comparative Analysis\n\n### Overview\n\n FlashAttention‑1 pioneered the IO‑aware fused attention kernel with tiling and streaming softmax normalization.\n FlashAttention‑2 rearchitected the work distribution and reduced non‑matmul overheads.\n FlashAttention‑3 adopts Hopper‑GPU asynchrony and FP8 quantization techniques to unlock peak GPU performance.\n\n### Architectural Differences\n\n FlashAttention‑1: [...] #### FlashAttention‑3 (Hopper / H100)\n\n On NVIDIA H100 GPUs, FP16/BF16 mode hits ~740TFLOPs/s (~75% utilization) and FP8 mode approaches ~1.2PFLOPs/s, delivering 1.5–2× speedups over FlashAttention‑2. FP8 operation also achieves ~2.6× lower numerical error (RMSE) compared to baseline FP8 attention implementations.\n\n#### Comparative Summary\n\n For Ampere/A100, FlashAttention‑2 delivers around 2× performance gain over v1.\n On Hopper/H100, FlashAttention‑3 boosts FP16 throughput by 1.5–2× and FP8 performance to 1.2PFLOPs/s, with high accuracy.\n Across versions, attention performance grows from ~50TFLOPs/s in v1 to over 1PFLOP/s in v3 when using FP8.\n\n### Integration \u0026 Code Examples\n\n#### Installing FlashAttention (v1 \u0026 v2)\n\n```\ninstall \n``` [...] FlashAttention‑3 exploited Hopper‑specific (H100) features—low‑precision support, warp-specialization, asynchronous pipelined GEMM-softmax execution, and block-wise FP8 quantization with incoherent processing. Achieved ~1.5–2× speedup over v2 in FP16/BF16 (~740 TFLOPs/s, ~75% utilization) and ~1.2 PFLOPs/s in FP8 mode, with ~2.6× lower numerical error than baseline FP8.",
+    "MatchedQueries": [
+      1
+    ]
+  },
+  {
+    "ID": "src_37d9e0ba8315",
+    "Title": "FlashAttention-3:Fast and Accurate Attention with Asynchrony and Low-precision",
+    "URL": "https://arxiv.org/html/2407.08608v1",
+    "Domain": "arxiv.org",
+    "FaviconURL": "https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png",
+    "Engine": "tavily",
+    "Category": "preprint",
+    "CategorySource": "rule",
+    "PublishedAt": "2024-07-11T00:00:00Z",
+    "RawScore": 0.80070794,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "10\nFor our benchmarks, FP16 FlashAttention-3 has a persistent kernel and load balancing strategy, while FP8 FlashAttention-3 does not. This partly explains why FP8 FlashAttention-3 does not perform as well for small sequence length and causal masking compared to the FP8 cuDNN kernels. and understanding the effects of low-precision attention in\nlarge-scale training.\nThough we have focused on Hopper GPUs in this work, we expect that the\ntechniques developed here will apply to other hardware accelerators.\nWe hope that a faster and more accurate primitive such as attention will unlock\nnew applications in long-context tasks. [...] To validate our method empirically, we benchmark FlashAttention-3 on the H100 SXM5 GPU over\na range of parameters and show that (1) FP16 achieves 1.5-2.0×\\times speedup over\nFlashAttention-2 in the forward pass (reaching up to 740 TFLOPs/s) and 1.5-1.75×\\times in the backward pass,\n(2) FP8 achieves close to 1.2 PFLOPs/s, and\n(3) for large sequence length, FP16 outperforms and FP8 is\ncompetitive22\n2\nMore precisely, for head dimension 64 FlashAttention-3 FP8 is ahead,\nwhile for head dimensions 128 and 256 it is at par for those cases\nwithout causal masking and behind with causal masking.\nwith a state-of-the-art implementation of attention from NVIDIA’s cuDNN library.\nWe also validate that FP16 FlashAttention-3 yields the same numerical error as FlashAttention-2 and is [...] We demonstrate that our method, FlashAttention-3, achieves speedup on H100 GPUs\nby 1.5-2.0×\\times with FP16 reaching up to 740 TFLOPs/s (75% utilization), and with FP8 reaching close to 1.2\nPFLOPs/s.\nWe validate that FP8 FlashAttention-3 achieves 2.6×\\times lower numerical error than a baseline\nFP8 attention.",
+    "MatchedQueries": [
+      1
+    ]
+  },
+  {
+    "ID": "src_2f6be285f946",
+    "Title": "[PDF] FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low ...",
+    "URL": "https://tridao.me/publications/flash3/flash3.pdf",
+    "Domain": "tridao.me",
+    "FaviconURL": null,
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2024-12-26T08:06:56Z",
+    "RawScore": 0.79845446,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "achieving only 35% utilization on the H100 GPU. We develop three main techniques to speed up attention on Hopper GPUs: exploiting asynchrony of the Tensor Cores and TMA to (1) overlap overall computation and data movement via warp-specialization and (2) interleave block-wise matmul and softmax operations, and (3) block quantization and incoherent processing that leverages hardware support for FP8 low-precision. We demonstrate that our method, FlashAttention-3, achieves speedup on H100 GPUs by 1.5-2.0× with FP16 reaching up to 740 TFLOPs/s (75% utilization), and with FP8 reaching close to 1.2 PFLOPs/s. We validate that FP8 FlashAttention-3 achieves 2.6× lower numerical error than a baseline FP8 attention. [...] To validate our method empirically, we benchmark FlashAttention-3 on the H100 SXM5 GPU over a range of parameters and show that (1) FP16 achieves 1.5-2.0× speedup over FlashAttention-2 in the forward pass (reaching up to 740 TFLOPs/s) and 1.5-1.75× in the backward pass, (2) FP8 achieves close to 1.2 PFLOPs/s, and (3) for large sequence length, FP16 outperforms and FP8 is competitive2 with a state-of-the-art implementation of attention from NVIDIA’s cuDNN library. We also validate that FP16 FlashAttention-3 yields the same numerical error as FlashAttention-2 and is better than the standard attention implementation as intermediate results (e.g., softmax rescaling) are kept in FP32. Moreover, FP8 FlashAttention-3 with block quantization and incoherent processing is 2.6× more accurate than [...] arXiv preprint arXiv:2405.04517, 2024.\n10For our benchmarks, FP16 FlashAttention-3 has a persistent kernel and load balancing strategy, while FP8 FlashAttention-3 does not. This partly explains why FP8 FlashAttention-3 does not perform as well for small sequence length and causal masking compared to the FP8 cuDNN kernels.\n12  Iz Beltagy, Matthew E Peters, and Arman Cohan. Longformer: The long-document transformer. arXiv preprint arXiv:2004.05150, 2020.\n Ganesh Bikshandi and Jay Shah. Delivering 1 PFLOP/s of Performance with FP8 FlashAttention-2, 2024.\nURL \n William Brandon, Aniruddha Nrusimha, Kevin Qian, Zachary Ankner, Tian Jin, Zhiye Song, and Jonathan Ragan-Kelley. Striped attention: Faster ring attention for causal transformers. arXiv preprint arXiv:2311.09431, 2023.",
+    "MatchedQueries": [
+      1
+    ]
+  },
+  {
+    "ID": "src_a9023e993828",
+    "Title": "FlashAttention-3 Explained: Asynchronous Hopper GPU Speedups \u0026 1.2 PFLOPS FP8 ⚡",
+    "URL": "https://www.youtube.com/watch?v=9LOxouj1o9M\u0026vl=en",
+    "Domain": "youtube.com",
+    "FaviconURL": "https://www.youtube.com/favicon.ico",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2026-11-07T00:00:00Z",
+    "RawScore": 0.79637206,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "[6:40] per operation than the Matmo unit. It's a massive drag on performance. Flash Attention 3 cleverly hides this slow math by interle it right underneath the\n[6:49] asynchronous WGMMA matrix computations of the next tile. Okay, let's look at the payoff of this fully asynchronous\n[6:56] warp specialized heist. Overlapping memory and math literally doubles our FP16 speed. We jump from Flash Attention\n[7:04] 2's 370 teraflops to an unbelievable 740 teraflops in Flash Attention 3, hitting 75% hardware utilization. And when we\n[7:13] switch to the lower precision FP8 format, we drop the execution time to just 9 milliseconds, pushing us well past 1.2 pedlops. That is absolutely [...] [7:22] huge. But as we know, speed means nothing if the math is wrong. Large language models are notorious for outlier features that can cause massive\n[7:31] quantization errors when you drop to FPA precision. To prevent this from destroying our accuracy, Flash Attention 3 uses block quantization, meaning it\n[7:39] scales the blocks dynamically and pairs it with incoherent processing like hotmar transformations. This lets them achieve 2.6 times lower numerical error\n[7:48] than a baseline per tensor FP8 quantization approach. This constant cat and mouse game between software and hardware gives us a pretty clear road\n[7:57] map for the future. Ampier gave us SRAMM tiling. Hopper introduced TMA and WGMMA asynchrony. And as we look to the [...] 06:26 — Softmax Interleaving: Hiding 256x exponential math latency under WGMMA matrix multiply [00:06:26 - 00:06:56]\n06:57 — Benchmarks \u0026 FP8 Block Quantization: Reaching 1.2+ PFLOPS with 2.6x lower numerical error [00:06:57 - 00:07:59][cite: 15]\n08:00 — Looking Ahead: Blackwell Architecture, Tensor Memory (T-MEM), and FlashAttention-4 [00:08:00 - 00:08:45][cite: 15]",
+    "MatchedQueries": [
+      1
+    ]
+  },
+  {
+    "ID": "src_73ec1a93f1ca",
+    "Title": "FlashAttention-3: Fast and Accurate Attention with ...",
+    "URL": "https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf",
+    "Domain": "proceedings.neurips.cc",
+    "FaviconURL": "https://proceedings.neurips.cc/favicon.ico",
+    "Engine": "tavily",
+    "Category": "preprint",
+    "CategorySource": "rule",
+    "PublishedAt": null,
+    "RawScore": 0.7777226,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "achieving only 35% utilization on the H100 GPU. We develop three main techniques to speed up attention on Hopper GPUs: exploiting asynchrony of the Tensor Cores and TMA to (1) overlap overall computation and data movement via warp-specialization and (2) interleave block-wise matmul and softmax operations, and (3) block quantization and incoherent processing that leverages hardware support for FP8 low-precision. We demonstrate that our method, FLASHATTENTION-3, achieves speedup on H100 GPUs by 1.5-2.0× with BF16 reaching up to 840 TFLOPs/s (85% utilization), and with FP8 reaching 1.3 PFLOPs/s. We validate that FP8 FLASHATTENTION-3 achieves 2.6× lower numerical error than a baseline FP8 attention. [...] To validate our method empirically, we benchmark FLASHATTENTION-3 on the H100 SXM5 GPU over a range of parameters and show that (1) BF16 achieves 1.5-2.0× speedup over FLASHATTENTION-2 in the forward pass (reaching up to 840 TFLOPs/s) and 1.5-1.75× in the backward pass, (2) FP8 achieves 1.3 PFLOPs/s, and (3) for large sequence length, BF16 outperforms and FP8 is on par compared to the state-of-the-art implementation of attention from NVIDIA’s cuDNN library. We also validate that FP16 FLASHATTENTION-3 yields the same numerical error as FLASHATTENTION-2 and is better than the standard attention implementation as intermediate results (e.g., softmax rescaling) are kept in FP32. Moreover, FP8 FLASHATTENTION-3 with block quantization and incoherent processing is 2.6× more accurate than standard [...] We are able to speed up attention by 1.5-2.0× times compared to FLASHATTENTION-2, and reduce FP8 numerical error by 2.6× compared to standard per-tensor quantization. Some limitations of our work that we hope to address in the future include: optimizing for LLM inference, and understanding the effects of low-precision attention in large-scale training.\nThough we have focused on Hopper GPUs in this work, we expect that the techniques developed here will apply to other hardware accelerators. We hope that a faster and more accurate primitive such as attention will unlock new applications in long-context tasks.",
+    "MatchedQueries": [
+      1
+    ]
+  },
+  {
+    "ID": "src_2f39c717681d",
+    "Title": "FlashAttention-3 Baseline Benchmarks",
+    "URL": "https://www.emergentmind.com/topics/flashattention-3-baseline",
+    "Domain": "emergentmind.com",
+    "FaviconURL": "https://assets.emergentmind.com/assets/logo/apple-touch-icon-0ef99efd1c30df096babcedaba91e194f5e1f64e010d9866253ec734c731ce23.png",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2025-12-20T00:00:00Z",
+    "RawScore": 0.767847,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "| cuDNN FP8 | FA-3 FP8 |\n --- |\n| Head Dim | 256 | 256 |\n| Seq. Length | 8,448 | 8,448 |\n| Throughput | 640 TFLOPs/s (32%) | 1,180 TFLOPs/s (60%) |\n| Speedup | – | 1.84× |\n| RMSE (FP8) | P1 | P2 |\n\nOverall, FlashAttention-3 benchmarks against these baselines demonstrate substantial improvements in throughput and numerical error, notably approaching 75% utilization of H100 Tensor Cores in FP16 and 60% in FP8, compared to 35% and 32% for the respective best baselines.\n\n## 4. Numerical Error Profiles\n\nBaseline accuracy is assessed by root-mean-squared error (RMSE) of the forward output P3 against an FP64 reference under a challenging heavy-tailed input (P4). [...] ## 3. Empirical Benchmarking on H100\n\nEmpirical performance is benchmarked using 16,384 tokens per iteration and reported as an average over at least 30 runs:\n\n| Standard Attention | FlashAttention-2 | FlashAttention-3 |\n --- \n| Precision | FP16/BF16 | FP16/BF16 | FP16/BF16 |\n| Head Dim | 128 | 128 | 128 |\n| Seq. Length | 8,448 | 8,448 | 8,448 |\n| Throughput | 50 TFLOPs/s (5%) | 370 TFLOPs/s (37%) | 661 TFLOPs/s (67%) |\n| Latency | 31.2 ms | 4.02 ms | 3.54 ms |\n| Speedup (FA-2) | – | – | 1.17× |\n| RMSE (FP16) | N×N8 | N×N9 | P0 |\n\nFor the FP8 baseline, flash attention-3 achieves a speedup and error reduction as follows: [...] 2000 character limit reached\n\n# FlashAttention-3 Baseline Benchmarks\n\nUpdated 20 December 2025\n\n FlashAttention-3 Baseline is a set of reference implementations used to benchmark GPU attention mechanisms, comparing performance, memory throughput, and numerical accuracy.\n Baseline variants differ in memory access and synchronization, with standard attention materializing full matrices while FlashAttention-2/3 fuse operations to minimize costly HBM transfers.\n Empirical results on the H100 show FlashAttention-3 achieving up to 67% Tensor-Core utilization and significantly lower RMSE compared to FP16/BF16 and FP8 baselines.",
+    "MatchedQueries": [
+      1
+    ]
+  },
+  {
+    "ID": "src_fe5b82a39131",
+    "Title": "GPU Producer-Consumer Kernel Pattern: TMA and Warp Specialization Explained | Spheron",
+    "URL": "https://www.spheron.network/blog/gpu-producer-consumer-kernel-pattern-flashattention",
+    "Domain": "spheron.network",
+    "FaviconURL": "https://www.spheron.network/favicon.ico",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2026-09-13T00:00:00Z",
+    "RawScore": 0.8909888,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Warp specialization means different warps (or warpgroups) inside the same thread block are assigned different, fixed jobs for the kernel's whole lifetime, rather than all warps executing identical code. In FlashAttention-3, one warpgroup is a dedicated producer that issues TMA loads and does no math, and the remaining warpgroups are consumers that run WGMMA matrix multiplies on the data the producer staged. [...] FlashAttention-3 implements the pattern directly in its kernel structure. One warpgroup is dedicated as the producer: it issues TMA loads of the Q, K, and V tiles and does no matrix multiplication at all, so it deallocates its own registers using `setmaxnreg` since it has no arithmetic to hold values for. The remaining warpgroups are consumers: they reallocate those freed registers to run WGMMA, Hopper's warpgroup-wide matrix multiply-accumulate instruction, on the tiles the producer already staged. The FlashAttention-3 paper frames the whole design choice as a hardware-driven one: \"Asynchrony is a result of hardware specialization to accelerate the most important operations in a ML workload: specific hardware units performing matrix multiplication (Tensor Cores) or memory loading (Tensor [...] FlashAttention-2 is a genuinely hand-tuned kernel, and the FlashAttention-3 paper reports it still reaches only about 35% GPU utilization on H100, because it has no async hardware to build a producer-consumer split on top of. Without TMA and WGMMA, a warp that needs a tile has to load it and wait, then compute, then load the next one; there's no cheap way to have one set of warps stay several tiles ahead of another. FlashAttention-3, running the same class of attention computation on the same H100 hardware but built around TMA, warp specialization, and ping-pong scheduling, reaches up to 740 TFLOPs/s in FP16 (about 75% of the GPU's theoretical peak) and roughly 1.2 PFLOPs/s in FP8, a 1.5-2.0x speedup over FlashAttention-2's forward pass. Same silicon, same attention formula; the",
+    "MatchedQueries": [
+      2
+    ]
+  },
+  {
+    "ID": "src_d57940ebdad0",
+    "Title": "FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision – PyTorch",
+    "URL": "https://pytorch.org/blog/flashattention-3",
+    "Domain": "pytorch.org",
+    "FaviconURL": "https://pytorch.org/wp-content/uploads/2024/10/cropped-favicon-180x180.webp",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": null,
+    "RawScore": 0.8846886,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "FlashAttention-3 makes use of all of these new features of Hopper, using powerful abstractions from NVIDIA’s CUTLASS library.  \n  \nBy rewriting FlashAttention to use these new features, we can already significantly speed it up (e.g., from 350 TFLOPS in FlashAttention-2 FP16 forward pass to around 540-570 TFLOPS). However, the asynchronous nature of the new instructions on Hopper (WGMMA and TMA) opens up additional algorithmic opportunities to overlap operations and thereby extract even greater performance. For this blogpost, we’ll explain two such techniques specific to attention. The generic technique of warp specialization, with separate producer and consumer warps doing TMA and WGMMA, is well-covered elsewhere in the context of GEMM and works the same here. [...] ## New hardware features on Hopper GPUs – WGMMA, TMA, FP8\n\nWhile FlashAttention-2 can achieve up to 70% theoretical max FLOPS on Ampere (A100) GPUs, it does not yet take advantage of new features on Hopper GPUs to maximize performance. We describe some of the new Hopper-specific features here, and why they are important.\n\n1. WGMMA (Warpgroup Matrix Multiply-Accumulate). This new feature makes use of the new Tensor Cores on Hopper, with much higher throughput1 than the older mma.sync instruction in Ampere (image from the H100 white paper). [...] three main techniques to speed up attention on Hopper GPUs: exploiting asynchrony of the Tensor Cores and TMA to (1) overlap overall computation and data movement via warp-specialization and (2) interleave block-wise matmul and softmax operations, and (3) incoherent processing that leverages hardware support for FP8 low-precision.",
+    "MatchedQueries": [
+      2
+    ]
+  },
+  {
+    "ID": "src_2f6be285f946",
+    "Title": "[PDF] FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low ...",
+    "URL": "https://tridao.me/publications/flash3/flash3.pdf",
+    "Domain": "tridao.me",
+    "FaviconURL": null,
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2024-12-26T08:06:56Z",
+    "RawScore": 0.843393,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Pingpong scheduling The asynchronous nature of WGMMA and TMA, along with warp-specialization, opens up the opportunity to overlap the softmax computation of one warpgroup with the GEMM of another warpgroup. [...] Hardware Level Parallel Agent Data Locale Capacity @ Bandwidth Chip Grid GMEM 80 GiB @ 3.35 TB/s GPC Threadblock Clusters L2 50 MiB @ 12 TB/s SM Threadblock (CTA) SMEM 228 KiB per SM, 31TB/s per GPU Thread Thread RMEM 256 KiB per SM Asynchrony and warp-specialization: GPUs are throughput processors that rely on concurrency and asynchrony to hide memory and execution latencies. For async memory copy between GMEM and SMEM, Hopper has the Tensor Memory Accelerator (TMA) as a dedicated hardware unit [38, §7.29]. Furthermore, unlike prior architectures such as Ampere, the Tensor Core of Hopper, exposed via the warpgroup-wide WGMMA instruction [40, §9.7.14], is also asynchronous and can source its inputs directly from shared memory. [...] 4 Empirical Validation We use the primitives from CUTLASS  such as WGMMA and TMA abstractions to implement FlashAttention-3 and evaluate its eﬃciency and accuracy.\n• Benchmarking attention. We measure the runtime of FlashAttention-3 across diﬀerent sequence lengths and compare it to a standard implementation in PyTorch, FlashAttention-2, FlashAttention-2 in Triton (which uses H100-speciﬁc instructions), as well as a vendor’s implementation of FlashAttention-2 optimized for H100 GPUs from cuDNN. We conﬁrm that FlashAttention-3 is up to 2.0× faster than FlashAttention-2 and 1.5× faster than FlashAttention-2 in Triton. FlashAttention-3 reaches up to 740 TFLOPs/s, 75% of the theoretical maximum TFLOPs/s on H100 GPUs.",
+    "MatchedQueries": [
+      2
+    ]
+  },
+  {
+    "ID": "src_9d7c7ed3a6ab",
+    "Title": "FlashAttention-3",
+    "URL": "https://arxiv.org/pdf/2407.08608",
+    "Domain": "arxiv.org",
+    "FaviconURL": "https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png",
+    "Engine": "tavily",
+    "Category": "preprint",
+    "CategorySource": "rule",
+    "PublishedAt": "2024-07-12T00:00:00Z",
+    "RawScore": 0.84027237,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Pingpong scheduling The asynchronous nature of WGMMA and TMA, along with warp-specialization, opens up the opportunity to overlap the softmax computation of one warpgroup with the GEMM of another warpgroup. [...] 4 Empirical Validation We use the primitives from CUTLASS  such as WGMMA and TMA abstractions to implement FlashAttention-3 and evaluate its efficiency and accuracy.\n• Benchmarking attention. We measure the runtime of FlashAttention-3 across different sequence lengths and compare it to a standard implementation in PyTorch, FlashAttention-2, FlashAttention-2 in Triton (which uses H100-specific instructions), as well as a vendor’s implementation of FlashAttention-2 optimized for H100 GPUs from cuDNN. We confirm that FlashAttention-3 is up to 2.0× faster than FlashAttention-2 and 1.5× faster than FlashAttention-2 in Triton. FlashAttention-3 reaches up to 740 TFLOPs/s, 75% of the theoretical maximum TFLOPs/s on H100 GPUs. [...] Hardware Level Parallel Agent Data Locale Capacity @ Bandwidth Chip Grid GMEM 80 GiB @ 3.35 TB/s GPC Threadblock Clusters L2 50 MiB @ 12 TB/s SM Threadblock (CTA) SMEM 228 KiB per SM, 31TB/s per GPU Thread Thread RMEM 256 KiB per SM Asynchrony and warp-specialization: GPUs are throughput processors that rely on concurrency and asynchrony to hide memory and execution latencies. For async memory copy between GMEM and SMEM, Hopper has the Tensor Memory Accelerator (TMA) as a dedicated hardware unit [38, §7.29]. Furthermore, unlike prior architectures such as Ampere, the Tensor Core of Hopper, exposed via the warpgroup-wide WGMMA instruction [40, §9.7.14], is also asynchronous and can source its inputs directly from shared memory.",
+    "MatchedQueries": [
+      2
+    ]
+  },
+  {
+    "ID": "src_73ec1a93f1ca",
+    "Title": "FlashAttention-3: Fast and Accurate Attention with ...",
+    "URL": "https://proceedings.neurips.cc/paper_files/paper/2024/file/7ede97c3e082c6df10a8d6103a2eebd2-Paper-Conference.pdf",
+    "Domain": "proceedings.neurips.cc",
+    "FaviconURL": "https://proceedings.neurips.cc/favicon.ico",
+    "Engine": "tavily",
+    "Category": "preprint",
+    "CategorySource": "rule",
+    "PublishedAt": null,
+    "RawScore": 0.83932644,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Pingpong scheduling The asynchronous nature of WGMMA and TMA, along with warp-specialization, opens up the opportunity to overlap the softmax computation of one warpgroup with the GEMM of another warpgroup. To motivate this, notice that non-matmul operations have much lower throughput than matmul operations on modern hardware accelerators. As an example, the H100 SXM5 GPU has 989 TFLOPS of FP16 matmul but only 3.9 TFLOPS of special functions such as exponential5 (necessary for softmax). For the attention forward pass in FP16 with head dimension 128, there are 512x more matmul FLOPS compared to exponential operations, but the exponential has 256x lower throughput, so exponential can take 50% of the cycle compared to matmul. The situation is even worse with FP8, where the matmul throughput [...] Hardware Level Parallel Agent Data Locale Capacity @ Bandwidth Chip Grid GMEM 80 GiB @ 3.35 TB/s GPC Threadblock Clusters L2 50 MiB @ 12 TB/s SM Threadblock (CTA) SMEM 228 KiB per SM, 31TB/s per GPU Thread Thread RMEM 256 KiB per SM Asynchrony and warp-specialization: GPUs are throughput processors that rely on concurrency and asynchrony to hide memory and execution latencies. For async memory copy between GMEM and SMEM, Hopper has the Tensor Memory Accelerator (TMA) as a dedicated hardware unit [38, §7.29]. Furthermore, unlike prior architectures such as Ampere, the Tensor Core of Hopper, exposed via the warpgroup-wide WGMMA instruction [40, §9.7.14], is also asynchronous and can source its inputs directly from shared memory. [...] Hardware support for asynchrony allows for warp-specialized kernels, where the warps of a CTA are divided into producer or consumer roles that only ever issue either data movement or computation.\nGenerically, this improves the compiler’s ability to generate optimal instruction schedules . In addition, Hopper supports the dynamic reallocation of registers between warpgroups via setmaxnreg [40, §9.7.17.1], so those warps doing MMAs can obtain a larger share of RMEM than those just issuing TMA (for which only a single thread is needed).",
+    "MatchedQueries": [
+      2
+    ]
+  },
+  {
+    "ID": "src_6ae1ede9f9ad",
+    "Title": "Lecture 36: CUTLASS and Flash Attention 3",
+    "URL": "https://www.youtube.com/watch?v=JwUcZwPOCpA",
+    "Domain": "youtube.com",
+    "FaviconURL": "https://www.youtube.com/favicon.ico",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2024-11-16T00:00:00Z",
+    "RawScore": 0.80070794,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "[24:00] so this is uh fa2 plus warp specialization with TMA and wgma that\n[24:07] already gets you very far but we can improve on this um what the sorry\n[24:17] um okay uh yes so with asynchrony we can use that uh well F\n[24:25] first here is the problem so the special functions used in softmax are very low frut as a concrete example let's say I\n[24:35] was in head Dimension 128 and I block size 128 by2 fp16\n[24:41] wgma would have execute over twice the Cycles as the X this the special\n[24:48] functions so the proportion is actually quite large unexpectedly large you might imagine uh in terms of looking at the\n[24:57] exponential it's even worse for FBA where it's actually would be equal they they would take an equal number of cycles and if [...] [10:33] GPU first we use the new instructions on the h100 namely wgma which is the higher frut MMA primitive fully asynchronous\n[10:41] and collectively executed by warp group namely for continuous warps and TMA which is the asynchronous load issued\n[10:49] from a single thread newly introduced on Hopper which accelerates the the um the memory transfer uh to get the tiles uh\n[10:58] into share memory second we leverage asynchrony in a sophisticated\n[11:05] manner we have both inter warp group overlapping this involves warp specialization to divide the warps into\n[11:13] producer and consumer roles as well as ping pong scheduling and intra warp group overlapping per warp per consumer\n[11:20] warp group to overlap the softmax namely the exponentials in softback with the asynchronous [...] [17:33] Hopper architecture we used a multi-stage design where the producer and consumers were interleaved in uh the\n[17:41] same warps to do both loads and MMA so essentially what we did is we took\n[17:49] fa2 and we replaced the CPA sync with TMA and the MMA with\n[17:56] wgma and that already Yi yielded a substantial Improvement we then motivated we were\n[18:03] motivated then by the fastest Hopper gem kernels using warp\n[18:11] specialization so we at some point we had both a multi-stage flash attention\n[18:18] kernel as well as a warp specialized one and we compared them and we were\n[18:26] able to extract a certain improvement with the specialized kernel so that's basically it it led to",
+    "MatchedQueries": [
+      2
+    ]
+  },
+  {
+    "ID": "src_ad9d6ff124ad",
+    "Title": "CUTLASS Tutorial: Fast Matrix-Multiplication with WGMMA on NVIDIA® Hopper™ GPUs - Colfax Research",
+    "URL": "https://research.colfax-intl.com/cutlass-tutorial-wgmma-hopper",
+    "Domain": "research.colfax-intl.com",
+    "FaviconURL": "https://i0.wp.com/research.colfax-intl.com/wp-content/uploads/2024/02/colfax-favicon.png?fit=180%2C180\u0026ssl=1",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2024-08-06T16:33:04Z",
+    "RawScore": 0.7429634,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Thank you for your interest in this series.\n\n      If you want to see real performance gains as motivation, you need to refer to much more serious and technical work. For instance, Jay Shah, a co-author of this series, is the first author of Flash Attention 3. FA3 is an H100-specific kernel, making heavy use of TMA, WGMMA, and warp-specialized pipelines, which are all the concepts we have been discussing. Compared to that, FA2 is an A100-specific kernel, making heavy use of cp\\_async, WMMA, and multi-stage pipelined kernels. Their performance difference (2x – 3x?), is the evidence for H100 vs. A100.\n\n      Now, we cannot make \\each\\ blogpost becomes an FA3. FA3 took 6 very smart and experienced people 5 months of continuous work to complete, give or take.",
+    "MatchedQueries": [
+      2
+    ]
+  },
+  {
+    "ID": "src_a61e813068be",
+    "Title": "FlashAttention-3 Guide: Architecture, Hopper TMA \u0026 FP8 Benchmarks",
+    "URL": "https://pristren.com/blog/flashattention-3-algorithm-guide",
+    "Domain": "pristren.com",
+    "FaviconURL": "https://pristren.com/apple-touch-icon.png",
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2026-03-19T00:00:00Z",
+    "RawScore": 0.7152057,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "snippet\n\n```\n +-----------------------------------------------------------------------+ | FlashAttention-3 Execution Pipeline | +-----------------------------------------------------------------------+ [ Producer Warps (TMA) ] ---\u003e Asynchronous HBM-to-SRAM Transfer (Zero ALU) | v (Circular Shared Memory Buffers) [ Consumer Warps (WGMMA) ] -\u003e Warp-Group Matrix Multiply \u0026 Accumulate | v (Interleaved Overlapping) [ Softmax Warps ] -\u003e Online Exponent Scaling \u0026 Normalization \n```\n\n### Pillar 1: Asynchronous Data Movement via TMA\n\nPrior GPU architectures required standard CUDA threads to manually execute register load and store instructions to move data from global HBM to shared memory.\n\nFlashAttention-3 leverages Hopper's dedicated Tensor Memory Accelerator (TMA): [...] A single hardware instruction commands the TMA hardware unit to copy multi-dimensional tensor blocks between HBM and shared memory asynchronously.\n The GPU register file and arithmetic logic units (ALUs) are completely bypassed during memory movement, freeing 100% of compute warps to execute matrix operations simultaneously.\n\n### Pillar 2: Producer-Consumer Warp Specialization\n\nFlashAttention-3 splits the warps within each Thread Block into dedicated roles: [...] Producer Warps: Manage circular memory buffers and command the TMA to pre-fetch upcoming $K$ and $V$ tiles into shared memory.\n Consumer Warps: Never touch global memory. They exclusively read from shared memory and execute high-speed Warp Group Matrix Multiply and Accumulate (WGMMA) instructions directly into hardware accumulator registers.\n Because data loading and matrix computation run in separate pipelines, tensor cores never stall waiting for memory barriers.\n\n### Pillar 3: Interleaved Softmax \u0026 GEMM\n\nIn online softmax, computing row maximums ($m\\_i$) and scaling denominators ($l\\_i$) requires reciprocal and exponential operations. In FlashAttention-2, these non-matmul operations interrupted matrix multiplication.",
+    "MatchedQueries": [
+      2
+    ]
+  },
+  {
+    "ID": "src_af0407b65732",
+    "Title": "[PDF] Tawa: Automatic Warp Specialization for Modern GPUs with ...",
+    "URL": "https://www.csl.cornell.edu/~zhiruz/pdfs/tawa-cgo2026.pdf",
+    "Domain": "csl.cornell.edu",
+    "FaviconURL": null,
+    "Engine": "tavily",
+    "Category": "blog",
+    "CategorySource": "rule",
+    "PublishedAt": "2026-03-09T18:45:41Z",
+    "RawScore": 0.68748367,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Overall, these results indicate that Tawa’s aref abstraction and automatic warp specialization provide a robust orches-tration mechanism that overlaps TMA loads and WGMMA across precisions. We also observe that the Triton baseline exceeds Tawa in certain cases, primarily because Triton has extensively tuned its software pipeline for simple GEMM kernels. Tawa’s advantages become more pronounced in more complex kernels with deeper communication–computation de-pendencies, such as FlashAttention in § V-D. [...] For FP16, Tawa attains up to 96% of FA3 throughput and delivers a consistent 1.21× speedup over Triton. This gap largely stems from the Triton baseline being effectively a FlashAttention-2 style implementation , which does not fully exploit Hopper warp specialized producer and consumer pipelines, in particular TMA driven global to shared trans-fers overlapped with WGMMA on Tensor Cores. At short sequences, the advantage of warp specialization is muted because prologue, epilogue, and barrier costs are not yet amortized. As L grows to at least 4K, memory traffic and synchronization become dominant; in this regime Tawa out-performs TileLang and ThunderKittens by up to 1.10× and 1.23×, respectively, indicating more effective overlap between data movement and compute. Although causal MHA [...] To this end, Hopper introduces two key hardware in-novations aimed at improving Tensor Core utilization: the Tensor Memory Accelerator (TMA) and Warp Group Ma-trix Multiply-Accumulate (WGMMA). The TMA facili-tates hardware-managed, multidimensional data transfers from global memory (GMEM) to shared memory, offloading the address generation and transfer coordination tasks from soft-ware to a dedicated unit. To further enable this overlap, Hopper extends the programming model with asynchronous (a) Tawa compilation 1 @triton.jit 2 def matmul(a_desc, b_desc, c_ptr, 3 M, N, K, 4 stride_cm: tl.const, stride_cn: tl.const, 5 Mt: tl.const, Nt: tl.const, Kt: tl.const): 6 pid = tl.program_id(axis=0) 7 num_pid_m = tl.cdiv(M, Mt) 8 pid_m = pid % num_pid_m 9 pid_n = pid // num_pid_m 10 o_am = pid_m  Mt",
+    "MatchedQueries": [
+      2
+    ]
+  },
+  {
+    "ID": "src_a122ce551e56",
+    "Title": "Flash Attention 3 --\u003e Triton · Issue #4308 · triton-lang/triton · GitHub",
+    "URL": "https://github.com/triton-lang/triton/issues/4308",
+    "Domain": "github.com",
+    "FaviconURL": "https://github.githubassets.com/favicons/favicon.png",
+    "Engine": "tavily",
+    "Category": "code",
+    "CategorySource": "rule",
+    "PublishedAt": "2024-07-11T00:00:00Z",
+    "RawScore": 0.6854659,
+    "RerankScore": null,
+    "AuthoritySignal": null,
+    "Summary": "",
+    "Content": "Reacted by Penn Jenks, llpan, Devashish Shankar, seustar, Hayden Prairie, fade\\_away, AinL, Student, ZZK, A.J and 7 more\n2. ### yiakwy-xpu-ml-framework-teamcommentedon Feb 10, 2025\n\n   @yiakwy-xpu-ml-framework-team\n\n   yiakwy-xpu-ml-framework-team\n\n   on Feb 10, 2025\n\n   More actions\n\n   @manman-ren @jenkspt WGMMA is now supported in triton IR.\n3. ### manman-rencommentedon Feb 10, 2025\n\n   @manman-ren\n\n   manman-ren\n\n   on Feb 10, 2025\n\n   Collaborator\n\n   More actions\n\n   We have implemented optimizations (warp specialization, computation pipelining) in this branch \n\n   Also see our latest blog post: \n\n   Reacted by Hao Wu, Shashank Shekhar, CHEN Xi, Minshen Zhang and George Pearse\n\nSign up for free to join this conversation on GitHub. Already have an account? Sign in to comment [...] Skip to content   \n \n \n\n## Navigation Menu\n\nSign in\n\nSign in\n\nSign up\n\nAppearance settings\n\nYou signed in with another tab or window. Reload to refresh your session. You signed out in another tab or window. Reload to refresh your session. You switched accounts on another tab or window. Reload to refresh your session. Dismiss alert\n\n{{ message }}\n\n## Repository navigation\n\n \n\n# Flash Attention 3 --\u003e Triton #4308\n\nNew issue\n\nCopy link\n\nNew issue\n\nCopy link\n\nOpen\n\nOpen\n\nFlash Attention 3 --\u003e Triton#4308\n\nCopy link\n\n## Description\n\n@jenkspt\n\njenkspt\n\nopened on Jul 11, 2024\n\nIssue body actions\n\nFlash attention 3 makes use of new features of the Hopper architecture.\n\n (async) WGMMA\n TMA\n overlap softmax [...] (async) WGMMA\n TMA\n overlap softmax\n\nAre these all things that can currently (or in the future) be optimized automatically with the triton compiler? And could the fused attention implementation from  make use of these without changes?\n\nReacted by llpan, Minshen Zhang and George Pearse\n\n## Activity\n\n1. ### manman-rencommentedon Jul 15, 2024\n\n   @manman-ren\n\n   manman-ren\n\n   on Jul 15, 2024\n\n   Collaborator\n\n   More actions\n\n   Triton OSS currently uses WGMMA (async). TMA is still experimental, but work is ongoing for improving the descriptors. For computation overlapping, I am actually trying to see if we can modify the existing SWP to enable specifying stages/clusters for computation ops.",
+    "MatchedQueries": [
+      2
+    ]
+  }
+]
