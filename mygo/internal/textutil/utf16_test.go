@@ -8,11 +8,11 @@ func TestUTF16Len(t *testing.T) {
 		want int
 	}{
 		{"", 0},
-		{"hello", 5},          // ASCII: 1 unit each
-		{"研究结果显示", 6},     // CJK in BMP: 1 unit each
-		{"a😀b", 4},            // emoji > U+FFFF: 2 units
-		{"😀😀", 4},            // two surrogate pairs
-		{"中😀a", 4},           // mixed: 1+2+1
+		{"hello", 5},  // ASCII: 1 unit each
+		{"研究结果显示", 6}, // CJK in BMP: 1 unit each
+		{"a😀b", 4},    // emoji > U+FFFF: 2 units
+		{"😀😀", 4},     // two surrogate pairs
+		{"中😀a", 4},    // mixed: 1+2+1
 	}
 	for _, c := range cases {
 		if got := utf16Len(c.in); got != c.want {

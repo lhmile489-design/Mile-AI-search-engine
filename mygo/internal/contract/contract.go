@@ -51,11 +51,11 @@ type TracePayload struct {
 // Phase picks which item type `items` holds; we keep two typed slices instead
 // of one untyped array so the generated TS is precise.
 type SourcesPayload struct {
-	Phase      string        `json:"phase"`      // raw | ranked
-	Engine     string        `json:"engine"`     // engine for this batch / ranked
-	QueryIndex *int          `json:"queryIndex"` // sub-query index for raw; null for ranked
-	Raw        []RawSource   `json:"raw"`        // phase=raw
-	Ranked     []SourceCard  `json:"ranked"`     // phase=ranked
+	Phase      string       `json:"phase"`      // raw | ranked
+	Engine     string       `json:"engine"`     // engine for this batch / ranked
+	QueryIndex *int         `json:"queryIndex"` // sub-query index for raw; null for ranked
+	Raw        []RawSource  `json:"raw"`        // phase=raw
+	Ranked     []SourceCard `json:"ranked"`     // phase=ranked
 }
 
 // TokenPayload is §3.3 `token` — a report delta, passed through verbatim.
@@ -70,20 +70,20 @@ type RelatedPayload struct {
 
 // DonePayload is §3.5 `done` — the terminal result.
 type DonePayload struct {
-	HistoryID    *string       `json:"historyId"`
-	LatencyMs    int64         `json:"latencyMs"`
-	StageTimings StageTimings  `json:"stageTimings"`
-	FirstTokenMs *int64        `json:"firstTokenMs"`
-	TokenStats   *TokenStats   `json:"tokenStats"`
-	Citations    []Citation    `json:"citations"`
-	Takeaways    []Takeaway    `json:"takeaways"`
-	Consensus    *Consensus    `json:"consensus"`
-	Engine       string        `json:"engine"`
-	EnginesUsed  []string      `json:"enginesUsed"`
-	Degraded     bool          `json:"degraded"`
-	SourceCount  int           `json:"sourceCount"`
-	CharCount    int           `json:"charCount"`
-	CacheHit     bool          `json:"cacheHit"`
+	HistoryID    *string      `json:"historyId"`
+	LatencyMs    int64        `json:"latencyMs"`
+	StageTimings StageTimings `json:"stageTimings"`
+	FirstTokenMs *int64       `json:"firstTokenMs"`
+	TokenStats   *TokenStats  `json:"tokenStats"`
+	Citations    []Citation   `json:"citations"`
+	Takeaways    []Takeaway   `json:"takeaways"`
+	Consensus    *Consensus   `json:"consensus"`
+	Engine       string       `json:"engine"`
+	EnginesUsed  []string     `json:"enginesUsed"`
+	Degraded     bool         `json:"degraded"`
+	SourceCount  int          `json:"sourceCount"`
+	CharCount    int          `json:"charCount"`
+	CacheHit     bool         `json:"cacheHit"`
 }
 
 // ErrorPayload is §3.6 `error` — a terminal failure (no done follows).
@@ -121,12 +121,12 @@ type HighlightRange struct {
 
 // Citation is §7.2 — one [n] marker resolved against the report text.
 type Citation struct {
-	Index         int             `json:"index"`         // source index (1..K)
-	MarkerStart   int             `json:"markerStart"`   // UTF-16 offset of "[n]" in report
+	Index         int             `json:"index"`       // source index (1..K)
+	MarkerStart   int             `json:"markerStart"` // UTF-16 offset of "[n]" in report
 	MarkerEnd     int             `json:"markerEnd"`
 	SentenceStart int             `json:"sentenceStart"` // UTF-16 offset of enclosing sentence
 	SentenceEnd   int             `json:"sentenceEnd"`
-	Highlight     *HighlightRange `json:"highlight"`     // located sentence in the source passage
+	Highlight     *HighlightRange `json:"highlight"` // located sentence in the source passage
 }
 
 type Takeaway struct {
@@ -144,11 +144,11 @@ type Consensus struct {
 
 // SourceScores is §5: relevance/authority/freshness/final + applied weights.
 type SourceScores struct {
-	Relevance *float64            `json:"relevance"`
-	Authority *float64            `json:"authority"`
-	Freshness *float64            `json:"freshness"`
-	Final     *float64            `json:"final"`
-	Weights   map[string]float64  `json:"weights"`
+	Relevance *float64           `json:"relevance"`
+	Authority *float64           `json:"authority"`
+	Freshness *float64           `json:"freshness"`
+	Final     *float64           `json:"final"`
+	Weights   map[string]float64 `json:"weights"`
 }
 
 // RawSource is the phase=raw trimmed card (the "raw 含" subset).
@@ -168,15 +168,15 @@ type RawSource struct {
 // SourceCard is the phase=ranked full card / history snapshot element.
 type SourceCard struct {
 	RawSource
-	Index           *int               `json:"index"`    // 1..K citation number
-	CategoryRule    string             `json:"categoryRule"`
-	Passage         *string            `json:"passage"`
-	PassageTruncated *bool             `json:"passageTruncated"`
-	Scores          SourceScores       `json:"scores"`
-	EngineSignals   map[string]float64 `json:"engineSignals"`
-	MatchedQueries  []int              `json:"matchedQueries"`
-	BibTeX          *string            `json:"bibtex"`
-	PDFURL          *string            `json:"pdfUrl"`
+	Index            *int               `json:"index"` // 1..K citation number
+	CategoryRule     string             `json:"categoryRule"`
+	Passage          *string            `json:"passage"`
+	PassageTruncated *bool              `json:"passageTruncated"`
+	Scores           SourceScores       `json:"scores"`
+	EngineSignals    map[string]float64 `json:"engineSignals"`
+	MatchedQueries   []int              `json:"matchedQueries"`
+	BibTeX           *string            `json:"bibtex"`
+	PDFURL           *string            `json:"pdfUrl"`
 }
 
 // ---- Config / suggestions / history (§13) ----
@@ -229,30 +229,30 @@ type HistoryList struct {
 
 // HistoryDetail is GET /api/history/{id} (§13.3, the full snapshot).
 type HistoryDetail struct {
-	ID               string          `json:"id"`
-	Query            string          `json:"query"`
-	FocusMode        string          `json:"focusMode"`
-	Engine           string          `json:"engine"`
-	EnginesUsed      []string        `json:"enginesUsed"`
-	Degraded         bool            `json:"degraded"`
-	ScopeFilters     []string        `json:"scopeFilters"`
-	RewrittenQueries []string        `json:"rewrittenQueries"`
-	StageTimings     *StageTimings   `json:"stageTimings"`
-	TraceEvents      []TracePayload  `json:"traceEvents"`
-	Sources          []SourceCard    `json:"sources"`
-	Report           *string         `json:"report"`
-	Citations        []Citation      `json:"citations"`
-	Takeaways        []Takeaway      `json:"takeaways"`
-	FollowUps        []string        `json:"followUps"`
-	Consensus        *Consensus      `json:"consensus"`
-	LatencyMs        int64           `json:"latencyMs"`
-	TokenStats       *TokenStats     `json:"tokenStats"`
-	LLMModel         *string         `json:"llmModel"`
-	SourceCount      int             `json:"sourceCount"`
-	CharCount        int             `json:"charCount"`
-	CacheHit         bool            `json:"cacheHit"`
-	CreatedAt        string          `json:"createdAt"`
-	UpdatedAt        string          `json:"updatedAt"`
+	ID               string         `json:"id"`
+	Query            string         `json:"query"`
+	FocusMode        string         `json:"focusMode"`
+	Engine           string         `json:"engine"`
+	EnginesUsed      []string       `json:"enginesUsed"`
+	Degraded         bool           `json:"degraded"`
+	ScopeFilters     []string       `json:"scopeFilters"`
+	RewrittenQueries []string       `json:"rewrittenQueries"`
+	StageTimings     *StageTimings  `json:"stageTimings"`
+	TraceEvents      []TracePayload `json:"traceEvents"`
+	Sources          []SourceCard   `json:"sources"`
+	Report           *string        `json:"report"`
+	Citations        []Citation     `json:"citations"`
+	Takeaways        []Takeaway     `json:"takeaways"`
+	FollowUps        []string       `json:"followUps"`
+	Consensus        *Consensus     `json:"consensus"`
+	LatencyMs        int64          `json:"latencyMs"`
+	TokenStats       *TokenStats    `json:"tokenStats"`
+	LLMModel         *string        `json:"llmModel"`
+	SourceCount      int            `json:"sourceCount"`
+	CharCount        int            `json:"charCount"`
+	CacheHit         bool           `json:"cacheHit"`
+	CreatedAt        string         `json:"createdAt"`
+	UpdatedAt        string         `json:"updatedAt"`
 }
 
 // Settings is the first-run / settings form payload (PRODUCT §8). Secrets are
